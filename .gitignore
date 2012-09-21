@@ -1,0 +1,9 @@
+*.pyc
+results/
+build/
+dist/
+*egg*
+.#*
+ref/
+log/
+dist/

@@ -1,0 +1,30 @@
+cluster:
+  name: odyssey
+  profile: lsf
+  cores: 1
+
+log_dir: log
+
+dir:
+  results: results
+  data: data
+  meta: meta
+  tmp: tmp
+
+program:
+  macs: macs
+
+input: test/data/s_1_1_10k.sam
+
+stage:
+  macs:
+    name: macs
+    program: macs
+    options:
+      - [--format, SAM]
+      - [--gsize, 4000000]
+      - [--pvalue, 0.1]
+      - [--mfold, "10,30"]
+
+run:
+  [ macs ]

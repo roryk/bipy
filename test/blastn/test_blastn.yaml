@@ -1,0 +1,21 @@
+dir:
+  work: tmp
+  ref: ref
+  
+log_dir: log
+
+cluster:
+  name: odyssey
+  profile: lsf
+  cores: 8
+  delay: 10
+  
+query: test/blastn/data/test_fasta.fa
+
+ref:
+  - name: opossum
+    ensembl_name: mdomestica_gene_ensembl
+    url: ftp://ftp.ensembl.org/pub/release-67/fasta/monodelphis_domestica/cdna/Monodelphis_domestica.BROADO5.67.cdna.all.fa.gz
+    file: ref/Monodelphis_domestica.BROADO5.67.cdna.all.fa
+
+  

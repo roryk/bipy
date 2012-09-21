@@ -1,0 +1,19 @@
+project:
+  name: potoroo
+  directory: /n/scratch00/hsph/projects/js_trinity/
+
+cluster:
+  queue: bigmem
+
+stage:
+  program: digital_normalization
+  call: /n/home05/kirchner/opt/share/khmer/scripts/normalize-by-median.py
+  n_hashes: 4
+  hashsize: 4e9
+                                         
+stage:
+  program: oases
+  call: /n/sw/oases_0.2.06_max_KMER_127/scripts/oases_pipeline.py
+  min_kmer: 51
+  max_kmer: 99
+  min_trans_lgth: 100

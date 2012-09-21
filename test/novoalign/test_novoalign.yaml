@@ -1,0 +1,31 @@
+cluster:
+  name: odyssey
+  profile: lsf
+  cores: 1
+
+dir:
+  results: results
+  ref: ref
+
+input: [test/data/s_1_1_10k.fq, test/data/s_1_1_10k_last.fq]
+ref: test/data/E_coli_k12.ASM584v1.15.dna.chromosome.Chromosome.fa
+
+log_dir: log
+
+program:
+  novoalign: novoalign
+  novoindex: novoindex
+
+stage:
+  novoalign:
+    name: novoalign
+    program: novoalign
+
+  novoindex:
+    name: novoindex
+    program: novoindex
+    options:
+      -k: 14
+      -s: 1
+
+run: [novoindex, novoalign]

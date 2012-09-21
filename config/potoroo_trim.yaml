@@ -1,0 +1,55 @@
+---
+cluster: 
+  name: odyssey
+  profile: lsf
+  cores: 8
+  delay: 10
+
+dir: 
+  results: results
+  data: data
+  meta: meta
+  tmp: tmp
+  
+program:
+  cutadapt: cutadapt
+  bwa: bwa
+
+stages:
+  trimadapter:
+    program: cutadapt
+    adapters:
+      - [aagctagcagttttcccagtcacgacgttgtaaaacgacggccagtgcctagcttataatacgactcactatagggaccactcctcgaggttaattaagc, -g, 100_bp_noti_upstream]
+      - [gcttaattaacctcgaggagtggtccctatagtgagtcgtattataagctaggcactggccgtcgttttacaacgtcgtgactgggaaaactgctagctt, -g, 100_bp_noti_upstream_rc]
+      - [atcccgggaattccggaccgaaacttgttctatagtgtcacctaaataggcctaatggtcatagctgtttcctgtgtgaaattgttatccgctccgcggc, -g, 100_bp_ecorv_downstream]
+      - [gccgcggagcggataacaatttcacacaggaaacagctatgaccattaggcctatttaggtgacactatagaacaagtttcggtccggaattcccgggat, -g, 100_bp_ecorv_downstream_rc]
+      - [ctgtctcttatacacatctctgatggcgcgagggaggcgtgtagatctcggtggtcgccgtatcatt, -a, transposon_end_sequence_and_nextera_adaptor_1_rc]
+      - [ctgtctcttatacacatctctgagcgggctggcaaggcagaccgatctcgtatgccgtcttctgcttg, -a, transposon_end_sequence_and_nextera_adaptor_2_rc]
+      - [aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa, -a, polya_sequence]
+      - [ttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttt, -a, polya_sequence_rc]
+    options:
+      --error-rate: 0.1
+      --minimum-length: 35
+
+  make_vector_library:
+    program: bwa
+    task: index
+    genome: meta/vector_sequence_orig.fa
+    genome_name: vector
+    options:
+      --threads: 8
+    
+  align_to_vector:
+    program: bwa
+    task: aln
+    options:
+      --threads: 8
+
+  bwa_to_sam:
+    program: bwa
+    task: samse
+    options:
+      --threads: 8
+
+run:
+  [ trim_adapter ]

@@ -1,0 +1,31 @@
+cluster:
+  name: odyssey
+  profile: lsf
+  cores: 1
+
+log_dir: log
+
+dir:
+  results: results/tests
+  data: data
+  meta: meta
+  tmp: tmp
+  ref: test/data/
+
+annotation:
+  name: k12
+  genome: k12
+  chrom_size_file: test/data/ecoli_k12.size
+  file: test/data/E_coli_k12.ASM584v1.15.gtf
+
+program:
+  htseq-count: htseq-count
+
+input: test/data/s_1_1_10k.sorted.bam
+
+stage:
+  rseqc:
+    name: rseqc
+
+run:
+  [ rseqc ]

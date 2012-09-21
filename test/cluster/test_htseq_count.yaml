@@ -1,0 +1,6 @@
+cluster:
+  name: odyssey
+  profile: lsf
+  cores: 1
+  work: log
+

@@ -1,0 +1,22 @@
+# each stage outputs a list of the path to its output files
+- experiment: test_experiment
+  indir: 
+  outdir: 
+  input: test.fa
+
+- name: stage1
+  program: fastqc
+  input: _i_
+  output: _i_.zip
+  arguments: {-o: fastqc,
+  --noextract: set,
+  }
+  
+- name: stage2
+  program: tagdust
+  input: _i_
+  output: _i_._tag_.fastq
+  
+- name: stage3
+  program: cutadapt
+  depends: stage2

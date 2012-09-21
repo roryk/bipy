@@ -1,0 +1,28 @@
+cluster:
+  name: odyssey
+  profile: lsf
+  cores: 4
+
+dir:
+  results: results
+
+input:
+  - test/data/test_fastq_1.fastq
+  - test/data/test_fastq_2.fastq
+  
+log_dir: log
+
+program:
+  tagdust: tagdust
+
+stage:
+  dust:
+    program: tagdust
+    contaminants: test/data/contaminants.fa
+    keep: [clean, dirty]
+    options:
+      - [-singleline]
+      - [-fdr, 0.1]
+
+run:
+  [dust]

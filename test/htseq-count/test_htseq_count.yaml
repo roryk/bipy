@@ -1,0 +1,36 @@
+cluster:
+  name: odyssey
+  profile: lsf
+  cores: 1
+
+log_dir: log
+
+dir:
+  results: results
+  data: data
+  meta: meta
+  tmp: tmp
+  ref: test/data/
+
+annotation:
+  name: k12
+  file: test/data/E_coli_k12.ASM584v1.15.gtf
+
+program:
+  htseq-count: htseq-count
+
+input: test/data/s_1_1_10k_last.sam
+to_combine: [test/data/s_1_1_10k_last.counts, test/data/s_1_1_10k.counts]
+
+stage:
+  htseq-count:
+    name: htseq-count
+    program: htseq-count
+    options:
+      - [--stranded=no]
+      - [--type=exon]
+      - [--idattr=gene_id]
+      - [--mode=union]
+
+run:
+  [ htseq-count ]

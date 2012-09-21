@@ -1,0 +1,33 @@
+cluster:
+  name: odyssey
+  profile: lsf
+  cores: 1
+
+log_dir: log
+
+dir:
+  results: results
+  data: data
+  meta: meta
+  tmp: tmp
+
+program:
+  cutadapt: cutadapt
+
+input:
+  - "test/data/cutadapt.fa"
+
+stage:
+  cutadapt:
+    name: cutadapt
+    program: cutadapt
+    platform: [iontorrent, polya]
+    adapters:
+      - [ACTGATG, -g, left]
+      - [GCCAAGTC, -a, right]
+    options:
+      - [--error-rate, 0.1]
+      - [--minimum-length, 10]
+
+run:
+  [ trim_adapter ]
