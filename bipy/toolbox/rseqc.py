@@ -88,7 +88,14 @@ def clipping_profile(in_file, config, out_prefix=None):
         out_prefix = os.path.join(_results_dir(config, "clipping"),
                                   append_stem(os.path.basename(in_file),
                                               "clipping"))
+    clip_plot_file = out_prefix + ".pdf"
+    if file_exists(clip_plot_file):
+        return clip_plot_file
+
     clip_run = sh.Command(which("clipping_profile.py"))
     clip_run(i=in_file, o=out_prefix)
+    # hack to get around the fact that clipping_profile saves the file in
+    # the script execution directory
+    sh.mv("clipping_profile.pdf", clip_plot_file)
 
-    return out_prefix + ".pdf"
+    return clip_plot_file
