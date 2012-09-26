@@ -95,6 +95,11 @@ class Cluster(object):
             return self._client
         return self._client
 
+    def new_client(self):
+        if self._client:
+            self._client.close()
+        self._client = Client(profile=self.profile)
+
     def view(self):
         """ returns a blocking, load balanced view to the cluster engines """
         if self._view:
@@ -123,6 +128,7 @@ class Cluster(object):
             not_up = self.n - up
             if not_up > 0:
                 logger.info("Waiting for %d engines to come up." %(not_up))
+                self.new_client()
                 return False
             else:
                 return True
