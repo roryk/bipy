@@ -42,7 +42,7 @@ def calculate_rpkm(count_file, gtf_file):
         lengths[gene] = lengths[gene] / float(len(transcripts))
 
     counts_df = pd.read_table(count_file, header=0, index_col=0)
-    length_list = [lengths.get(x, 1000) / 1000.0 for x in counts_df.index]
+    length_list = [lengths.get(x) / 1000.0 for x in counts_df.index]
     length_normalized = (counts_df.transpose() / length_list).transpose()
     rpkm = length_normalized.apply(lambda x: x /
                                    (float(x.sum()) / 1000000))
