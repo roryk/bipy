@@ -7,56 +7,6 @@ from bcbio.utils import safe_makedir
 this_dir, this_filename = os.path.split(__file__)
 RFILE = os.path.join(this_dir, "R", "diffexp.R")
 
-""" what does deseq need. a counts table of gene name and condition. i
-think i have that via the htseq-count script, just not combined. maybe
-need to take those in and then merge them
-step 1: merge the htseq-count files
-step 2: load in the table
-step 3: load in the experimental design table
-row names are the conditions in the count table
-need condition the experiment condition
-plus other conditions as columns
-
-how to figure out the conditions
-filename: condition i guess makes the most sense
-or just a list corresponding to the filenames
-
-then we take those counts and merge them into one file
-load the conds
-call cds <- newCountDataSet with and that and the conds
-call estimateSizeFactors(cds)
-call estimateDispersions(cds)
-# do those diagnostic plots after this works
-
-now need to determine which type of analysis to do
-it can either take a parameter that says which type
-or figure it out based on the number of conditions
-
-## handling DE for two treatments
-if only two and each has more than one:
-res <- nbinomTest( cds, "untreated", "treated" )
-# make plotDe function
-# make pval hist function
-# write table out
-
-# if you only have replicates for one condition
-this is the same as above
-
-# if you have no replicates
-estimateDispersions(cds, method="blind", sharingMode="fit-only")
-res <- nbinomTest( cds, "untreated", "treated" )
-
-## handling DE for multiple treatments
-this is a little more involved, keep this as an option for now
-for now output a not implemented message and fail gracefully
-> fit1 <- fitNbinomGLMs( cdsFull, count ~ libType + condition )
-> fit0 <- fitNbinomGLMs( cdsFull, count ~ libType  )
-
- cds <- newCountDataSet( countsTable, conds )
- cds <- estimateSizeFactors( cds )
- cds <- estimateDispersions(cds)
-"""
-
 
 def run(in_file, conds, out_prefix):
     deseq_table_out = out_prefix + ".deseq.txt"
@@ -68,7 +18,6 @@ def run(in_file, conds, out_prefix):
     r = robjects.r
     r.assign('in_file', in_file)
     r.assign('deseq_table_out', deseq_table_out)
-    r.assign('dispersion_plot_out', dispersion_plot_out)
     r.assign('mva_plot_out', mva_plot_out)
     r.assign('conds',
              vectors.StrVector.factor(vectors.StrVector(conds)))
@@ -91,6 +40,27 @@ def run(in_file, conds, out_prefix):
         cds = estimateDispersions(cds)
         ''')
 
+    _plot_disp_ests(r, dispersion_plot_out)
+
+    # if there are two conditions use the standard deseq diffexpression
+    sconds = set(conds)
+    if len(sconds) == 2:
+        r.assign('cond1', str(list(sconds)[0]))
+        r.assign('cond2', str(list(sconds)[1]))
+        r('''
+        res = nbinomTest(cds, cond1, cond2)
+        ''')
+        _plot_MvA(r, mva_plot_out)
+    r('''write.table(res, file=deseq_table_out, quote=FALSE,
+    row.names=FALSE, sep="\t")''')
+    return deseq_table_out
+
+
+def _plot_disp_ests(r, dispersion_plot_out):
+    """
+    make a plot of the dispersion estimation
+    """
+    r.assign("dispersion_plot_out", dispersion_plot_out)
     r('''
         plotDispEsts <- function(cds) {
           plot(rowMeans(counts(cds, normalized=TRUE)),
@@ -102,26 +72,23 @@ def run(in_file, conds, out_prefix):
         plotDispEsts(cds)
         dev.off()
           ''')
+    return r
 
-    # if there are two conditions use the standard deseq diffexpression
-    sconds = set(conds)
-    if len(sconds) == 2:
-        r.assign('cond1', str(list(sconds)[0]))
-        r.assign('cond2', str(list(sconds)[1]))
-        r('''
-        res = nbinomTest(cds, cond1, cond2)
-        ''')
-        r('''
-        plotDE <- function(res) {
-          plot(res$baseMean,res$log2FoldChange,log="x",pch=20,cex=.3,
-          col=ifelse(res$padj < .1, "red","black")) }
-        pdf(mva_plot_out)
-        plotDE(res)
-        dev.off()
-        ''')
-    r('''write.table(res, file=deseq_table_out, quote=FALSE,
-    row.names=FALSE, sep="\t")''')
-    return deseq_table_out
+
+def _plot_MvA(r, mva_plot_out):
+    """
+    make a MvA plot of the differential expression
+    """
+    r.assign("mva_plot_out", mva_plot_out)
+    r('''
+    plotMvA <- function(res) {
+      plot(res$baseMean,res$log2FoldChange,log="x",pch=20,cex=.3,
+      col=ifelse(res$padj < .1, "red","black")) }
+    pdf(mva_plot_out)
+    plotMvA(res)
+    dev.off()
+    ''')
+    return r
 
 
 def run_with_config(in_file, gtf, config):
