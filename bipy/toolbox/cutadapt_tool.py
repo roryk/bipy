@@ -1,11 +1,14 @@
 """This module provides an interface to cutadapt with a set of commonly
 used adapters for trimming
 """
-from bipy.utils import flatten_options, append_stem, flatten
+from bipy.utils import flatten_options, append_stem, flatten, which
 from operator import itemgetter
 import subprocess
 import os
 from bcbio.utils import safe_makedir, file_exists
+import difflib
+import sh
+
 
 # adapter sequences for various commonly used systems
 ADAPTERS = {}
@@ -90,3 +93,22 @@ def run(in_file, stage_config, config):
     arguments.extend(["--output", out_file, in_file])
     subprocess.check_call(arguments)
     return out_file
+
+
+def fix_paired_files(first, second, out_file=None):
+    if out_file is None:
+        common = _common_prefix(first, second) + "fixed"
+    mergeFastq = sh.Command(which("mergeShuffledFastqSeqs.pl"))
+    #cmd = ["mergeShuffledFastqSeqs.pl", "-f1", first, "-f2", second,
+    #       "-o", common, "-t", "-r", "^@(\S+)/[1|2]$"]
+           #subprocess.check_call(cmd)
+    mergeFastq(f1=first, f2=second, o=common, t=True, r=r'^@(\S+)/[1|2]$')
+    # XXX these might not be right.
+    return (common + "_1.fastq", common + "_2.fastq")
+
+
+def _common_prefix(first, second):
+    for i, (x, y) in enumerate(zip(first, second)):
+        if x != y:
+            break
+    return first[:i]
