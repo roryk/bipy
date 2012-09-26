@@ -3,6 +3,9 @@ import subprocess
 from bipy.utils import flatten, remove_suffix
 from bcbio.utils import safe_makedir
 import os
+import logging
+
+logger = logging.getLogger("bipy")
 
 _FASTQ_RANGES = {"sanger": [33, 73],
                  "solexa": [59, 104],
@@ -16,6 +19,7 @@ def detect_fastq_format(in_file, MAX_RECORDS=1000000):
     detects the format of a fastq file
     will return multiple formats if it could be more than one
     """
+    logger.info("Detecting FASTQ format on %s." % (in_file))
     kept = list(_FASTQ_RANGES.keys())
     with open(in_file) as in_handle:
         records_read = 0
