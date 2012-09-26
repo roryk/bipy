@@ -99,3 +99,103 @@ def clipping_profile(in_file, config, out_prefix=None):
     sh.mv("clipping_profile.pdf", clip_plot_file)
 
     return clip_plot_file
+
+
+def genebody_coverage(in_file, config, out_prefix=None):
+    """
+    used to check the 5'/3' bias across transcripts
+    """
+    prefix = "coverage"
+    out_prefix = _get_out_prefix(in_file, config, out_prefix, prefix)
+    coverage_plot_file = out_prefix + ".geneBodyCoverage.pdf"
+    if file_exists(coverage_plot_file):
+        return coverage_plot_file
+
+    gtf = _get_gtf(config)
+    bed = _gtf2bed(gtf)
+    coverage_run = sh.Command(which("geneBody_coverage.py"))
+    coverage_run(i=in_file, r=bed, o=out_prefix)
+    return coverage_plot_file
+
+
+def junction_annotation(in_file, config, out_prefix=None):
+    """
+    compile novel/known information about splice junctions
+    XXX find the real name of this
+    """
+    prefix = "junction"
+    out_prefix = _get_out_prefix(in_file, config, out_prefix, prefix)
+    junction_file = out_prefix + "whateverthisis"
+    if file_exists(junction_file):
+        return junction_file
+    junction_run = sh.Command(which("junction_annotation.py"))
+    gtf = _get_gtf(config)
+    bed = _gtf2bed(gtf)
+    junction_run(i=in_file, o=out_prefix, r=bed)
+    return junction_file
+
+
+def junction_saturation(in_file, config, out_prefix=None):
+    """
+    check if splicing is deep enough to perform alternative splicing
+    analysis
+    XXX find the real name of this output file
+    """
+    prefix = "saturation"
+    out_prefix = _get_out_prefix(in_file, config, out_prefix, prefix)
+    saturation_file = out_prefix + ".saturation.pdf"
+    saturation_run = sh.Command(which("junction_saturation.py"))
+    gtf = _get_gtf(config)
+    bed = _gtf2bed(gtf)
+    saturation_run(i=in_file, o=out_prefix, r=bed)
+    return saturation_file
+
+
+def RPKM_count(in_file, config, out_prefix=None):
+    """
+    XXX find the real name of this output file too
+    """
+    prefix = "RPKM_count"
+    out_prefix = _get_out_prefix(in_file, config, out_prefix, prefix)
+    rpkm_count_file = out_prefix + "counts"
+    gtf = _get_gtf(config)
+    bed = _gtf2bed(gtf)
+    RPKM_count_run = sh.Command(which("RPKM_count.py"))
+    RPKM_count_run(i=in_file, r=bed, o=out_prefix)
+    return rpkm_count_file
+
+
+def RPKM_saturation(in_file, config, out_prefix=None):
+    """
+    XXX find the real name of this output file
+    """
+    prefix = "RPKM_saturation"
+    out_prefix = _get_out_prefix(in_file, config, out_prefix, prefix)
+    rpkm_saturation_file = out_prefix + "counts"
+    gtf = _get_gtf(config)
+    bed = _gtf2bed(gtf)
+    RPKM_saturation_run = sh.Command(which("RPKM_saturation.py"))
+    RPKM_saturation_run(i=in_file, r=bed, o=out_prefix)
+    return rpkm_saturation_file
+
+
+
+def _get_out_prefix(in_file, config, out_prefix, prefix):
+    if not out_prefix:
+        out_prefix = os.path.join(_results_dir(config, prefix),
+                                  os.path.basename(in_file))
+    return out_prefix
+
+def _get_gtf(config):
+    gtf = config["annotation"].get("file", None)
+    if not gtf or not file_exists(gtf):
+        logger.error("genebody_coverage needs a GTF file passed to it.")
+        exit(1)
+    return gtf
+
+
+def _gtf2bed(gtf):
+    bed = replace_suffix(gtf, "bed")
+    if not file_exists(bed):
+        sh.gtf2bed(gtf, _out=bed)
+    return bed
