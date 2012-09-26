@@ -121,11 +121,10 @@ def genebody_coverage(in_file, config, out_prefix=None):
 def junction_annotation(in_file, config, out_prefix=None):
     """
     compile novel/known information about splice junctions
-    XXX find the real name of this
     """
     prefix = "junction"
     out_prefix = _get_out_prefix(in_file, config, out_prefix, prefix)
-    junction_file = out_prefix + "whateverthisis"
+    junction_file = out_prefix + ".splice_events.pdf"
     if file_exists(junction_file):
         return junction_file
     junction_run = sh.Command(which("junction_annotation.py"))
@@ -139,11 +138,10 @@ def junction_saturation(in_file, config, out_prefix=None):
     """
     check if splicing is deep enough to perform alternative splicing
     analysis
-    XXX find the real name of this output file
     """
     prefix = "saturation"
     out_prefix = _get_out_prefix(in_file, config, out_prefix, prefix)
-    saturation_file = out_prefix + ".saturation.pdf"
+    saturation_file = out_prefix + ".junctionSsaturation_plot.pdf"
     saturation_run = sh.Command(which("junction_saturation.py"))
     gtf = _get_gtf(config)
     bed = _gtf2bed(gtf)
@@ -153,11 +151,11 @@ def junction_saturation(in_file, config, out_prefix=None):
 
 def RPKM_count(in_file, config, out_prefix=None):
     """
-    XXX find the real name of this output file too
+    produce RPKM
     """
     prefix = "RPKM_count"
     out_prefix = _get_out_prefix(in_file, config, out_prefix, prefix)
-    rpkm_count_file = out_prefix + "counts"
+    rpkm_count_file = out_prefix + "_read_count.xls"
     gtf = _get_gtf(config)
     bed = _gtf2bed(gtf)
     RPKM_count_run = sh.Command(which("RPKM_count.py"))
@@ -167,11 +165,11 @@ def RPKM_count(in_file, config, out_prefix=None):
 
 def RPKM_saturation(in_file, config, out_prefix=None):
     """
-    XXX find the real name of this output file
+    estimate the precision of RPKM calculation by resampling
     """
     prefix = "RPKM_saturation"
     out_prefix = _get_out_prefix(in_file, config, out_prefix, prefix)
-    rpkm_saturation_file = out_prefix + "counts"
+    rpkm_saturation_file = out_prefix + "saturation.pdf"
     gtf = _get_gtf(config)
     bed = _gtf2bed(gtf)
     RPKM_saturation_run = sh.Command(which("RPKM_saturation.py"))
