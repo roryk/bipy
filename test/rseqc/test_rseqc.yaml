@@ -13,15 +13,14 @@ dir:
   ref: test/data/
 
 annotation:
-  name: k12
-  genome: k12
-  chrom_size_file: test/data/ecoli_k12.size
-  file: test/data/E_coli_k12.ASM584v1.15.gtf
+  name: mm9
+  genome: mm9
+  file: /n/home05/kirchner/hsph/biodata/genomes/Mmusculus/mm9/iGenomes/Ensembl/NCBIM37/Annotation/Genes/genes_with_chr.gtf
 
 program:
   htseq-count: htseq-count
 
-input: test/data/s_1_1_10k.sorted.bam
+input: test/data/mouse_chr17.sorted.bam
 
 stage:
   rseqc:

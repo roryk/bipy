@@ -42,18 +42,27 @@ class TestRseqc(unittest.TestCase):
         #self.assertTrue(file_exists(out_file_bw))
 
     def test_junction_annotation(self):
-        """ XXX this needs an organism with actual splice juntions """
         out_file_junction = rseqc.junction_annotation(self.input_file,
                                                       self.config)
         print out_file_junction
         self.assertTrue(file_exists(out_file_junction))
 
     def test_junction_saturation(self):
-        """ XXX this needs an organism with actual splice junctions """
         out_file_saturation = rseqc.junction_saturation(self.input_file,
                                                         self.config)
         print out_file_saturation
         self.assertTrue(file_exists(out_file_saturation))
+
+    def test_RPKM_count(self):
+        out_file_RPKM = rseqc.RPKM_count(self.input_file,
+                                         self.config)
+        self.assertTrue(file_exists(out_file_RPKM))
+
+    def test_RPKM_saturation(self):
+        out_file_RPKM_saturation = rseqc.RPKM_saturation(self.input_file,
+                                                         self.config)
+        self.assertTrue(file_exists(out_file_RPKM_saturation))
+
 
 if __name__ == "__main__":
     suite = unittest.TestLoader().loadTestsFromTestCase(TestRseqc)
