@@ -57,13 +57,19 @@ for now output a not implemented message and fail gracefully
  cds <- estimateDispersions(cds)
 """
 
-def run(in_file, conds, out_file):
-    if os.path.exists(out_file):
-        return out_file
-    safe_makedir(os.path.dirname(out_file))
+
+def run(in_file, conds, out_prefix):
+    deseq_table_out = out_prefix + ".deseq.txt"
+    dispersion_plot_out = out_prefix + ".dispersions.pdf"
+    mva_plot_out = out_prefix + ".MvA.pdf"
+
+    safe_makedir(os.path.dirname(out_prefix))
+
     r = robjects.r
     r.assign('in_file', in_file)
-    r.assign('out_file', out_file)
+    r.assign('deseq_table_out', deseq_table_out)
+    r.assign('dispersion_plot_out', dispersion_plot_out)
+    r.assign('mva_plot_out', mva_plot_out)
     r.assign('conds',
              vectors.StrVector.factor(vectors.StrVector(conds)))
     r('''
@@ -83,8 +89,19 @@ def run(in_file, conds, out_file):
     else:
         r('''
         cds = estimateDispersions(cds)
-        '''
-        )
+        ''')
+
+    r('''
+        plotDispEsts <- function(cds) {
+          plot(rowMeans(counts(cds, normalized=TRUE)),
+          fitInfo(cds)$perGeneDispEsts,
+          pch = '.', log="xy")
+          xg <- 10^seq(-.5,5,length.out=300)
+          lines(xg,fitInfo(cds)$dispFun(xg),col="red")}
+        pdf(dispersion_plot_out)
+        plotDispEsts(cds)
+        dev.off()
+          ''')
 
     # if there are two conditions use the standard deseq diffexpression
     sconds = set(conds)
@@ -94,10 +111,18 @@ def run(in_file, conds, out_file):
         r('''
         res = nbinomTest(cds, cond1, cond2)
         ''')
-    r('''print(res)''')
-    r('''write.table(res, file=out_file, quote=FALSE, row.names=FALSE, sep="\t")''')
+        r('''
+        plotDE <- function(res) {
+          plot(res$baseMean,res$log2FoldChange,log="x",pch=20,cex=.3,
+          col=ifelse(res$padj < .1, "red","black")) }
+        pdf(mva_plot_out)
+        plotDE(res)
+        dev.off()
+        ''')
+    r('''write.table(res, file=deseq_table_out, quote=FALSE,
+    row.names=FALSE, sep="\t")''')
+    return deseq_table_out
 
-    return out_file
 
 def run_with_config(in_file, gtf, config):
     pass

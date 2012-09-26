@@ -1,6 +1,6 @@
 from bipy.toolbox import deseq
 from bipy.utils import replace_suffix
-from bcbio.utils import safe_makedir
+from bcbio.utils import safe_makedir, file_exists
 import os
 import unittest
 
@@ -13,10 +13,10 @@ class TestDeseq(unittest.TestCase):
                       "treat", "treat", "treat"]
 
     def test_run(self):
-        out_file = "results/deseq/test_deseq.txt"
-        result = deseq.run(self.count_file, self.conds, out_file=out_file)
-        self.assertTrue(out_file == result)
-        self.assertTrue(os.path.getsize(result) > 0)
+        out_prefix = "results/tests/deseq/test_deseq"
+        safe_makedir(os.path.dirname(out_prefix))
+        result = deseq.run(self.count_file, self.conds, out_prefix=out_prefix)
+        self.assertTrue(file_exists(result))
 
 if __name__ == "__main__":
     suite = unittest.TestLoader().loadTestsFromTestCase(TestDeseq)
