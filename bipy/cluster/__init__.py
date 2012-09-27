@@ -6,8 +6,8 @@ import atexit
 import yaml
 import uuid
 
-SLEEP_TIME = 5
-CLUSTER_TIMEOUT = 300
+DEFAULT_CLUSTER_TIMEOUT = 300
+DEFAULT_DELAY = 10
 
 # XXX come up with a saner set of defaults, especially for the cluster.
 DEFAULT_CONFIG = {"dir": {"results": "results",
@@ -48,13 +48,15 @@ def start_cluster(cluster_config):
     cluster = Cluster(**cluster_config["cluster"])
     logger.info("Starting the cluster with %d nodes." % (cluster.n))
     cluster.start()
+    sleep(cluster.delay)
 
     # only continue when the cluster is completely up
     slept = 0
     while(not cluster.is_up()):
-        sleep(SLEEP_TIME)
-        slept = slept + SLEEP_TIME
-        if(slept > cluster_config["cluster"].get("timeout", CLUSTER_TIMEOUT)):
+        sleep(cluster.delay)
+        slept = slept + cluster.delay
+        if(slept > cluster_config["cluster"].get("timeout",
+                                                 DEFAULT_CLUSTER_TIMEOUT)):
             logger.error("Cluster startup timed out.")
             cluster.stop()
             exit(-1)
@@ -69,7 +71,7 @@ class Cluster(object):
     def __init__(self, **kwargs):
         self.profile = kwargs.get("profile", "default")
         self.n = kwargs.get("cores", 1)
-        self.delay = kwargs.get("delay", 1)
+        self.delay = kwargs.get("delay", DEFAULT_DELAY)
         self._client = None
         self._view = None
         self._work = kwargs.get("work", ".")
@@ -128,7 +130,7 @@ class Cluster(object):
             not_up = self.n - up
             if not_up > 0:
                 logger.info("Waiting for %d engines to come up." %(not_up))
-                self.new_client()
+                #self.new_client()
                 return False
             else:
                 return True
