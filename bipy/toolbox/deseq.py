@@ -1,3 +1,8 @@
+"""
+wrapper to run DESeq analyses. at the moment it will only run with a simple
+two-condition comparison. more complicated experimental setups could be
+added by creating a dataframe of the conditions and passing it in
+"""
 import os
 import rpy2.robjects as robjects
 import rpy2.robjects.vectors as vectors
@@ -8,6 +13,29 @@ this_dir, this_filename = os.path.split(__file__)
 RFILE = os.path.join(this_dir, "R", "diffexp.R")
 
 
+def load_count_file(in_file, r):
+    """
+    returns an r session with a read count file loaded as 'counts'
+    """
+    r.assign('in_file', in_file)
+    r('''
+    counts = read.table(in_file, header=TRUE, row.names=1)
+    ''')
+    return r
+
+
+def make_count_set(conds, r):
+    """
+    returns an r session with a new count data set loaded as cds
+    """
+    r.assign('conds', vectors.StrVector.factor(vectors.StrVector(conds)))
+    r('''
+    require('DESeq')
+    cds = newCountDataSet(counts, conds)
+    ''')
+    return r
+
+
 def run(in_file, conds, out_prefix):
     deseq_table_out = out_prefix + ".deseq.txt"
     dispersion_plot_out = out_prefix + ".dispersions.pdf"
@@ -16,17 +44,12 @@ def run(in_file, conds, out_prefix):
     safe_makedir(os.path.dirname(out_prefix))
 
     r = robjects.r
-    r.assign('in_file', in_file)
     r.assign('deseq_table_out', deseq_table_out)
     r.assign('mva_plot_out', mva_plot_out)
-    r.assign('conds',
-             vectors.StrVector.factor(vectors.StrVector(conds)))
+
+    r = load_count_file(in_file, r)
+    r = make_count_set(conds, r)
     r('''
-    require('DESeq')
-    counts = read.table(in_file, header=TRUE, row.names=1)
-    print(head(counts))
-    cds = newCountDataSet(counts, conds)
-    print(head(cds))
     cds = estimateSizeFactors(cds)
     ''')
 
