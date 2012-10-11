@@ -4,6 +4,9 @@ import sh
 from bipy.log import logger
 from bcbio.utils import file_exists, safe_makedir
 from os.path import basename
+import glob
+import pandas as pd
+from math import sqrt
 
 
 def _results_dir(config, prefix=""):
@@ -163,6 +166,52 @@ def RPKM_count(in_file, config, out_prefix=None):
     return rpkm_count_file
 
 
+def merge_RPKM(in_dir):
+    """
+    reads in all RPKM_count files in a directory and combines them into
+    one file
+    """
+    HEADER = ["chrom", "st", "end", "accession" "score",
+              "gene_strand", "tag_count", "RPKM"]
+    NAME_COL = 3
+    HEADER_START = 0
+    HEADER_END = 5
+    RPKM_COLUMN = 6
+    COUNT_COLUMN = 5
+
+    merged_file = os.path.join(in_dir, "RPKM.combined.txt")
+    if file_exists(merged_file):
+        return merged_file
+
+    RPKM_files = glob.glob(os.path.join(in_dir, "*_read_count.xls"))
+    col_names = map(os.path.basename, map(remove_suffix, RPKM_files))
+    dataframes = [pd.DataFrame.from_csv(f, sep="\t", index_col=NAME_COL)
+                  for f in RPKM_files]
+    # make sure the data frames are sorted in the same order
+    dataframes = [d.sort_index() for d in dataframes]
+    # get the header rows (columns 0-6)
+    common = dataframes[0].ix[:, HEADER_START:HEADER_END]
+    items = zip(col_names, dataframes)
+    for item in items:
+        common[item[0] + "_count"] = item[1].ix[:, COUNT_COLUMN]
+        common[item[0] + "_RPKM"] = item[1].ix[:, RPKM_COLUMN]
+
+    count_columns = [item[0] + "_count" for item in items]
+    rpkm_columns = [item[0] + "_RPKM" for item in items]
+
+    common["count_total"] = common.ix[:, count_columns].sum(axis=1)
+    common["RPKM_mean"] = common.ix[:, rpkm_columns].mean(axis=1)
+    if len(rpkm_columns) > 1:
+        common["RPKM_sd"] = common.ix[:, rpkm_columns].std(axis=1)
+        common["RPKM_sem"] = common["RPKM_sd"] / sqrt(len(rpkm_columns))
+    else:
+        common["RPKM_sd"] = float('NaN')
+        common["RPKM_sem"] = float('NaN')
+
+    common.to_csv(merged_file, sep="\t")
+    return merged_file
+
+
 def RPKM_saturation(in_file, config, out_prefix=None):
     """
     estimate the precision of RPKM calculation by resampling
@@ -177,12 +226,12 @@ def RPKM_saturation(in_file, config, out_prefix=None):
     return rpkm_saturation_file
 
 
-
 def _get_out_prefix(in_file, config, out_prefix, prefix):
     if not out_prefix:
         out_prefix = os.path.join(_results_dir(config, prefix),
                                   os.path.basename(in_file))
     return out_prefix
+
 
 def _get_gtf(config):
     gtf = config["annotation"].get("file", None)

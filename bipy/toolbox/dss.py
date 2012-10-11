@@ -48,12 +48,14 @@ def _plot_MvA(r, mva_plot_out):
 
 def load_count_file_as_matrix(in_file, r):
     """
-    dss needs the counts to be in matrix form afaict not a data frame.
-    load the data file as that
+    load in counts from a table and convert into matrix form for
+    DSS
     """
     r.assign('in_file', in_file)
     r('''
-    counts = as.matrix(read.table(in_file, header=TRUE, row.names=1))
+    count_table = read.table(in_file, header=TRUE, row.names=1)
+    count_matrix = as.matrix(count_table)
+    colnames(count_matrix) = NULL
     ''')
     return r
 

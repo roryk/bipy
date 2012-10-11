@@ -83,16 +83,18 @@ class Cluster(object):
         narg = "--n=%d" % (self.n)
         parg = "--profile=%s" % (self.profile)
         #"--work-dir=" + str(self._work),
+    #                                       "--cluster-id=" + self._cluster_id,
         return_code = subprocess.call(["ipcluster", "start",
                                        "--daemonize=True",
                                        "--delay=" + str(self.delay),
-                                       "--cluster-id=" + self._cluster_id,
                                        "--log-level=" + str(self._log_level),
                                        narg, parg])
 
     def client(self):
         """ returns a handle to the client """
         if not self._client:
+            #         self._client = Client(profile=self.profile,
+            #                      cluster_id = self._cluster_id)
             self._client = Client(profile=self.profile)
             return self._client
         return self._client
@@ -116,8 +118,9 @@ class Cluster(object):
 
     def stop(self):
         parg = "--profile=%s" % (self.profile)
-        carg = "--cluster-id=%s" % (self._cluster_id)
-        return_code = subprocess.call(["ipcluster", "stop", parg, carg])
+        #carg = "--cluster-id=%s" % (self._cluster_id)
+        #return_code = subprocess.call(["ipcluster", "stop", parg, carg])
+        return_code = subprocess.call(["ipcluster", "stop", parg])
 
     def is_up(self):
         """ returns True if the cluster is completely up and false otherwise """

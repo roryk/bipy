@@ -17,12 +17,12 @@ import subprocess
 from bipy.log import logger
 import os
 from bcbio.utils import safe_makedir
-
+import sh
 
 def _build_command(input_file, options, control_file=None, out_dir=None):
     name = remove_suffix(os.path.basename(input_file))
-    if out_dir:
-        name = os.path.join(out_dir, name)
+    #if out_dir:
+    #    name = os.path.join(out_dir, name)
 
     options = ["=".join(map(str, x)) for x in options]
 
@@ -37,11 +37,14 @@ def _build_command(input_file, options, control_file=None, out_dir=None):
 def run(input_file, options, control_file=None, out_dir=None):
     out_files = (remove_suffix(input_file) + "_peaks.bed",
                  remove_suffix(input_file) + "_summits.bed")
-    if out_dir:
-        out_files = [os.path.join(out_dir, os.path.basename(x)) for
-                     x in out_files]
     cmd = _build_command(input_file, options, control_file, out_dir)
     subprocess.check_call(cmd)
+    if out_dir:
+        for f in out_files:
+			sh.mv(f, os.path.join(out_dir, os.path.basename(f)))
+        out_files = [os.path.join(out_dir, os.path.basename(x)) for
+                     x in out_files]
+  
     return out_files
 
 

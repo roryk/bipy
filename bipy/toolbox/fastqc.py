@@ -61,6 +61,7 @@ def _make_outdir(config):
 
 def _make_outfile(input_file, config):
     outdir = _make_outdir(config)
+    #outfile = "".join([os.path.basename(input_file), "_fastqc.zip"])
     outfile = "".join([remove_suffix(os.path.basename(input_file)),
                        "_fastqc.zip"])
     return os.path.join(outdir, outfile)
