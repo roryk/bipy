@@ -91,7 +91,8 @@ class Cluster(object):
                                        narg, parg])
 
     def client(self):
-        """ returns a handle to the client """
+        """ returns a handle to the client
+        XXX: might need to apss cluster-id to this """
         if not self._client:
             #         self._client = Client(profile=self.profile,
             #                      cluster_id = self._cluster_id)
