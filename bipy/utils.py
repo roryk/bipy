@@ -6,6 +6,7 @@ import subprocess
 import functools
 import stat
 import difflib
+from itertools import repeat
 
 
 def get_stem(filename):
@@ -284,3 +285,18 @@ def update_tracker(tracker, curr_files):
 
 def curr_files(tracker):
     return [x.curr_file() for x in tracker]
+
+
+def dict_to_vectors(d):
+    """ convert a dictionary to two vectors. returns a tuple of
+    (key, value). For example: {"a": [1, 2, 3], "b": [4, 5]} returns
+    (["a" "a" "a" "b" "b"], [1 2 3 4 5])
+
+    """
+
+    ks = []
+    vs = []
+    for k, v in d.items():
+        ks += list(repeat(k, len(v)))
+        vs += v
+    return (ks, vs)
