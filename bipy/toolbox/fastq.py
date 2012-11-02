@@ -14,22 +14,24 @@ def fix_mate_pairs_with_config(fq1, fq2, config):
     if "pair_info" not in config:
         f_suffix = None
         r_suffix = None
-    f_suffix = config["pair_info"].get("forward_read_suffix", None)
-    r_suffix = config["pair_info"].get("reverse_read_suffix", None)
-    fix_mate_pairs(fq1, fq2, f_suffix, r_suffix)
+    else:
+        f_suffix = config["pair_info"].get("forward_read_suffix", None)
+        r_suffix = config["pair_info"].get("reverse_read_suffix", None)
+    out_files = fix_mate_pairs(fq1, fq2, f_suffix, r_suffix)
+    return out_files
 
 
 def get_read_name_function(suffix):
     if suffix:
         suffix_crop = -len(suffix)
 
-        def f_name(read_name):
+        def read_name_function(read_name):
             """Remove the suffix from a forward read name."""
             assert read_name.endswith(suffix), read_name
             return read_name[:suffix_crop]
     else:
-        read_name = None
-    return read_name
+        read_name_function = None
+    return read_name_function
 
 
 def fix_mate_pairs(fq1, fq2, f_suffix="/1", r_suffix="/2"):
@@ -62,3 +64,41 @@ def fix_mate_pairs(fq1, fq2, f_suffix="/1", r_suffix="/2"):
                 fq2_single_handle.write(r_dict.get_raw(key))
 
     return [fq1_out, fq2_out]
+
+
+class DetectFastqFormat(object):
+
+    _FASTQ_RANGES = {"sanger": [33, 73],
+                     "solexa": [59, 104],
+                     "illumina_1.3+": [64, 104],
+                     "illumina_1.5+": [66, 104],
+                     "illumina_1.8+": [33, 74]}
+
+    def __init__(self):
+        pass
+
+    @classmethod
+    def run(self, in_file, MAX_RECORDS=1000000):
+        """
+        detects the format of a fastq file
+        will return multiple formats if it could be more than one
+        """
+        kept = list(self._FASTQ_RANGES.keys())
+        with open(in_file) as in_handle:
+            records_read = 0
+            for i, line in enumerate(in_handle):
+                # get the quality line
+                if records_read >= MAX_RECORDS:
+                    break
+                if i % 4 is 3:
+                    records_read += 1
+                    for c in line:
+                        formats = kept
+                        if len(formats) == 1:
+                            return formats
+                        for form in formats:
+                            if (self._FASTQ_RANGES[form][0] > ord(c) or
+                                self._FASTQ_RANGES[form][1] < ord(c)):
+                                kept.remove(form)
+
+        return formats
