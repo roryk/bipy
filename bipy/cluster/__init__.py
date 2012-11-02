@@ -22,7 +22,7 @@ config = DEFAULT_CONFIG
 cluster = None
 client = None
 view = None
-
+direct_view = None
 
 def load_config(config_file):
     """ load the config file, overwriting the defaults if it has them """
@@ -44,7 +44,7 @@ def stop_cluster():
 
 
 def start_cluster(cluster_config):
-    global cluster, view, client
+    global cluster, view, client, direct_view
     cluster = Cluster(**cluster_config["cluster"])
     logger.info("Starting the cluster with %d nodes." % (cluster.n))
     cluster.start()
@@ -65,6 +65,7 @@ def start_cluster(cluster_config):
     logger.info("Cluster up.")
     client = cluster.client()
     view = cluster.view()
+    direct_view = cluster.direct_view()
 
 
 class Cluster(object):
@@ -74,6 +75,7 @@ class Cluster(object):
         self.delay = kwargs.get("delay", DEFAULT_DELAY)
         self._client = None
         self._view = None
+        self._direct_view = None
         self._work = kwargs.get("work", ".")
         self._log_level = kwargs.get("log_level", 30)
         self._cluster_id = str(uuid.uuid1())
@@ -116,6 +118,14 @@ class Cluster(object):
         self._view = self._client.load_balanced_view()
         self._view.block = True
         return self._view
+
+    def direct_view(self):
+        if self._direct_view:
+            return self._direct_view
+        if not self.client:
+            self._client = Client(profile = self.profile)
+        self._direct_view = self._client[:]
+        return self._direct_view
 
     def stop(self):
         parg = "--profile=%s" % (self.profile)
