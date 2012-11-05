@@ -7,10 +7,10 @@ import os
 import rpy2.robjects as robjects
 import rpy2.robjects.vectors as vectors
 import pandas as pd
-from bcbio.utils import safe_makedir
+from bcbio.utils import safe_makedir, file_exists
+from bipy.toolbox.reporting import LatexReport, panda_to_latex
+from makeo.template import Template
 
-this_dir, this_filename = os.path.split(__file__)
-RFILE = os.path.join(this_dir, "R", "diffexp.R")
 
 
 def load_count_file(in_file, r):
@@ -116,3 +116,98 @@ def _plot_MvA(r, mva_plot_out):
 
 def run_with_config(in_file, gtf, config):
     pass
+
+
+class DeseqParser(object):
+    """
+    parse a directory of a deseq experiment to generate a summary report
+
+    """
+    GRAPH_SUFFIXES = ((".dispersions.pdf", "", 1.0),
+                      (".MvA.pdf", "", 1.0))
+
+    INFO_SUFFIXES = {"annotated": ".annotated.deseq.txt",
+                     "deseq": ".deseq.txt"}
+
+    def __init__(self, base_dir):
+        self._dir = base_dir
+        self._comparison = os.path.basename(base_dir)
+        self._top_max = 25
+
+    def get_deseq_graphs(self):
+        final_graphs = []
+        for suffix, caption, size in self.GRAPH_SUFFIXES:
+            final_f = os.path.join(self._dir, self._comparison + suffix)
+            if file_exists(final_f):
+                final_graphs.append((final_f, caption, size))
+        return final_graphs
+
+    def get_top_genes(self):
+        final_info = {}
+        for info, suffix in self.INFO_SUFFIXES.items():
+            final_f = os.path.join(self._dir, self._comparison + suffix)
+            if file_exists(final_f):
+                final_info[info] = final_f
+
+        # prefer to use the annotated file
+        if "annotated" in final_info:
+            top_table = self._get_top_by(final_info["annotated"])
+        else:
+            top_table = self._get_top_by(final_info["deseq"])
+
+        return (top_table, "")
+
+    def _get_top_by(self, in_file, by="padj"):
+        if "annotated" in in_file:
+            cols = ["id", "log2FoldChange", "padj", "symbol"]
+        else:
+            cols = ["id", "log2FoldChange", "padj"]
+        if by not in cols:
+            by = "padj"
+        table = pd.read_table(in_file, header=0)
+        # grab the top genes up to top_max genes
+        sub_table = table[cols].sort(columns=by)[0:self._top_max]
+
+        return sub_table
+
+
+class DeseqReport(LatexReport):
+
+    def __init__(self):
+        pass
+
+    def template(self):
+        return self._template
+
+    def generate_report(self, name, figures=None, top_hits=None):
+        template = Template(self._template)
+        section = template.render(name=name, figures=figures,
+                                  top_hits=top_hits)
+        return section
+
+    _template = r"""
+\subsection*{DESeq report for ${name}}
+
+% if figures:
+    % for i, (figure, caption, size) in enumerate(figures):
+        \begin{figure}[htbp]
+            \centering
+            \includegraphics[width=${size}\linewidth] {${figure}}
+            \caption{${caption}}
+        \end{figure}
+    % endfor
+% endif
+
+% if top_hits:
+    <%
+        from bipy.toolbox.reporting import panda_to_latex
+        table, caption = top_hits
+        table_out = panda_to_latex(table, caption)
+    %>
+    what
+% endif
+"""
+
+
+#    ${panda_to_latex(table, caption)}
+#    ${panda_to_latex(top_hits[0], top_hits[1])}
