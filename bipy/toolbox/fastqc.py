@@ -6,8 +6,9 @@ import os
 import logging
 import abc
 from mako.template import Template
-from bipy.reporting import LatexReport, safe_latex
-
+from bipy.toolbox.reporting import LatexReport, safe_latex
+from bipy.pipeline import AbstractRunner
+import sh
 
 logger = logging.getLogger("bipy")
 
@@ -90,6 +91,9 @@ def run(input_file, fastqc_config, config):
     subprocess.check_call(cmd)
 
     return outfile
+
+
+
 
 
 class FastQCParser(object):
