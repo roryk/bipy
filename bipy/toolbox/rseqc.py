@@ -7,6 +7,7 @@ from os.path import basename
 import glob
 import pandas as pd
 from math import sqrt
+import abc
 
 
 def _results_dir(config, prefix=""):
@@ -48,35 +49,40 @@ def _fetch_chrom_sizes(config):
     return chrom_size_file
 
 
-def bam2bigwig(in_file, config, out_file=None):
+def bam2bigwig(in_file, config, out_prefix=None):
     """
     assumes the library preparation was not strand specific for now
     """
     prefix = "bigwig"
     chrom_size_file = config["annotation"].get("chrom_size_file", None)
+    out_prefix = _get_out_prefix(in_file, config, out_prefix, prefix)
     if not chrom_size_file:
         chrom_size_file = _fetch_chrom_sizes(config)
-    out_prefix = os.path.join(_results_dir(config, prefix),
-                              basename(in_file))
     wiggle_file = out_prefix + ".wig"
-    bam2wig = sh.Command(which("bam2wig.py"))
-    bam2wig(i=in_file, s=chrom_size_file, o=out_prefix)
 
-    if out_file is None:
-        out_file = out_prefix + ".bw"
+    if not file_exists(wiggle_file):
+        bam2wig = sh.Command(which("bam2wig.py"))
+        bam2wig(i=in_file, s=chrom_size_file, o=out_prefix)
 
-    sh.wigToBigWig(wiggle_file, chrom_size_file, out_file)
-    return out_file
+    bigwig_file = out_prefix + ".bw"
+
+    if file_exists(bigwig_file):
+        return bigwig_file
+
+    sh.wigToBigWig(wiggle_file, chrom_size_file, bigwig_file)
+    return bigwig_file
 
 
-def bam_stat(in_file, config, out_file=None):
+def bam_stat(in_file, config, out_prefix=None):
     """
     dump read maping statistics from a SAM or BAM file to out_file
     """
-    if not out_file:
-        out_file = os.path.join(_results_dir(config, "bam_stat"),
-                                replace_suffix(os.path.basename(in_file),
-                                               "bam_stat.txt"))
+    prefix = "bam_stat"
+    out_prefix = _get_out_prefix(in_file, config, out_prefix, prefix)
+    out_file = out_prefix + ".bam_stat.txt"
+    if file_exists(out_file):
+        return out_file
+
     bam_stat_run = sh.Command(which("bam_stat.py"))
     bam_stat_run(i=in_file, _err=out_file)
 
@@ -87,10 +93,8 @@ def clipping_profile(in_file, config, out_prefix=None):
     """
     estimate the clipping profile of the reads
     """
-    if not out_prefix:
-        out_prefix = os.path.join(_results_dir(config, "clipping"),
-                                  append_stem(os.path.basename(in_file),
-                                              "clipping"))
+    prefix = "clipping"
+    out_prefix = _get_out_prefix(in_file, config, out_prefix, prefix)
     clip_plot_file = out_prefix + ".pdf"
     if file_exists(clip_plot_file):
         return clip_plot_file
@@ -145,6 +149,9 @@ def junction_saturation(in_file, config, out_prefix=None):
     prefix = "saturation"
     out_prefix = _get_out_prefix(in_file, config, out_prefix, prefix)
     saturation_file = out_prefix + ".junctionSsaturation_plot.pdf"
+    if file_exists(saturation_file):
+        return saturation_file
+
     saturation_run = sh.Command(which("junction_saturation.py"))
     gtf = _get_gtf(config)
     bed = _gtf2bed(gtf)
@@ -161,6 +168,8 @@ def RPKM_count(in_file, config, out_prefix=None):
     rpkm_count_file = out_prefix + "_read_count.xls"
     gtf = _get_gtf(config)
     bed = _gtf2bed(gtf)
+    if file_exists(rpkm_count_file):
+        return rpkm_count_file
     RPKM_count_run = sh.Command(which("RPKM_count.py"))
     RPKM_count_run(i=in_file, r=bed, o=out_prefix)
     return rpkm_count_file
@@ -218,9 +227,13 @@ def RPKM_saturation(in_file, config, out_prefix=None):
     """
     prefix = "RPKM_saturation"
     out_prefix = _get_out_prefix(in_file, config, out_prefix, prefix)
-    rpkm_saturation_file = out_prefix + "saturation.pdf"
+    rpkm_saturation_file = out_prefix + "RPKM_saturation.pdf"
     gtf = _get_gtf(config)
     bed = _gtf2bed(gtf)
+
+    if file_exists(rpkm_saturation_file):
+        return rpkm_saturation_file
+
     RPKM_saturation_run = sh.Command(which("RPKM_saturation.py"))
     RPKM_saturation_run(i=in_file, r=bed, o=out_prefix)
     return rpkm_saturation_file
@@ -228,8 +241,12 @@ def RPKM_saturation(in_file, config, out_prefix=None):
 
 def _get_out_prefix(in_file, config, out_prefix, prefix):
     if not out_prefix:
-        out_prefix = os.path.join(_results_dir(config, prefix),
-                                  os.path.basename(in_file))
+        out_dir = os.path.join(_results_dir(config),
+                               os.path.basename(in_file),
+                               prefix)
+        safe_makedir(out_dir)
+        out_prefix = os.path.join(out_dir, prefix)
+
     return out_prefix
 
 
@@ -246,3 +263,77 @@ def _gtf2bed(gtf):
     if not file_exists(bed):
         sh.gtf2bed(gtf, _out=bed)
     return bed
+
+
+class RseqcParser(object):
+    """
+    parse a directory full of rseqc results
+
+    """
+    DIRS = ["bam_stat", "clipping", "coverage", "junction",
+            "saturation", "RPKM_count", "RPKM_saturation"]
+
+    GRAPHS = ((os.path.join("RPKM_saturation", "RPKM_saturation.pdf"),
+               "", 1.0),
+              (os.path.join("clipping", "clipping.pdf"), "", 1.0),
+              (os.path.join("coverage", "coverage.pdf"),
+               "", 1.0),
+              (os.path.join("saturation", "junction_saturation.pdf"),
+               "", 1.0),
+              (os.path.join("junction", "splice_events.pdf"), "", 1.0))
+
+    INFO = (os.path.join("bam_stat", "bam_stat.txt"),
+            os.path.join("RPKM_count", "RPKM_count.txt"))
+
+    def __init__(self, base_dir):
+        self._dir = base_dir
+
+    def get_rseqc_graphs(self):
+        final_graphs = []
+        for f, caption, size in self.GRAPHS:
+            final_f = os.path.join(self._dir, f)
+            if file_exists(final_f):
+                final_graphs.append((final_f, caption, size))
+        return final_graphs
+
+
+class RseqcReport(LatexReport):
+
+    CAPTIONS = {"RPKM_saturation.pdf": "",
+                "coverage.geneBodyCoverage.pdf": "",
+                "clipping.pdf": "",
+                "coverage.pdf": "",
+                "junction_saturation.pdf": "",
+                "splice_events.pdf": ""}
+
+   def __init__(self):
+       pass
+
+    def template(self):
+        return self._template
+
+    def _add_captions(self, figures):
+        new_figures = []
+        for figure in figures:
+            filenme = os.path.basename(figure)
+            caption = self.CAPTIONS.get(filename, "")
+            new_figures.append((figure[0], caption, figure[2]))
+        return new_figures
+
+    def generate_report(self, name, figures=None):
+        template = Template(self._template)
+        section = template.render(name=name, figures=figures)
+
+    _template = r"""
+\subsection*{Rseqc report for ${name}}
+
+% if figures:
+    % for i, (figure, caption, size) in enumerate (figures):
+    \begin{figure}[htbp]
+        \centering
+        \includegraphics[width=${size}\linewidth] {${figure}}
+        \caption{${caption}}
+    \end{figure}
+    % endfor
+% endif
+"""
