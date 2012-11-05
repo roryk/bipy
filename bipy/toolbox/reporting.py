@@ -7,6 +7,7 @@ from mako.template import Template
 import sh
 import os
 import abc
+from itertools import repeat
 
 
 def safe_latex(to_fix):
@@ -60,3 +61,37 @@ class LatexReport(object):
     def generate_report(self, *args, **kwargs):
         """Generate the Latex output using the template"""
         return
+
+
+def make_latex_table_header(length):
+    tabular = "|l|" + "".join(repeat("r|", length - 1))
+    table_header = r"\begin{tabular}{%s}" % (tabular)
+    return table_header
+
+
+def panda_to_latex(table, caption=""):
+    header = make_latex_table_header(len(table.keys()))
+
+    def _panda_row_to_latex_row(row):
+        vals = map(str, [e for e in row[1]])
+        return " & ".join(vals) + " \\\\"
+
+    rows = [_panda_row_to_latex_row(x) for x in table.iterrows()]
+
+    _table_template = r"""
+\begin{table}[h]
+    \centering
+    ${header}
+
+    % for row in rows:
+        ${row}
+    % endfor
+    \hline
+    \end{tabular}
+    \caption{${caption}}
+\end{table}
+"""
+
+    template = Template(_table_template)
+    latex_table = template.render(header=header, rows=rows, caption=caption)
+    return latex_table
