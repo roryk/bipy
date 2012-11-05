@@ -9,7 +9,7 @@ import rpy2.robjects.vectors as vectors
 import pandas as pd
 from bcbio.utils import safe_makedir, file_exists
 from bipy.toolbox.reporting import LatexReport, panda_to_latex
-from makeo.template import Template
+from mako.template import Template
 
 
 
@@ -204,7 +204,7 @@ class DeseqReport(LatexReport):
         table, caption = top_hits
         table_out = panda_to_latex(table, caption)
     %>
-    what
+    ${table_out}
 % endif
 """
 
