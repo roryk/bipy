@@ -8,6 +8,7 @@ import glob
 import pandas as pd
 from math import sqrt
 import abc
+from mako.template import Template
 
 
 def _results_dir(config, prefix=""):
@@ -306,8 +307,8 @@ class RseqcReport(LatexReport):
                 "junction_saturation.pdf": "",
                 "splice_events.pdf": ""}
 
-   def __init__(self):
-       pass
+    def __init__(self):
+        pass
 
     def template(self):
         return self._template
@@ -315,7 +316,7 @@ class RseqcReport(LatexReport):
     def _add_captions(self, figures):
         new_figures = []
         for figure in figures:
-            filenme = os.path.basename(figure)
+            filename = os.path.basename(figure)
             caption = self.CAPTIONS.get(filename, "")
             new_figures.append((figure[0], caption, figure[2]))
         return new_figures
