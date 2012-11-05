@@ -7,6 +7,7 @@ from bipy.log import logger
 import datetime
 import os
 import yaml
+import abc
 
 
 def setup_pipeline(config):
@@ -49,3 +50,31 @@ def _setup_config(config):
             config["dir"]["results"] = stamped_dir
 
     return config
+
+
+def AbstractRunner(object):
+
+    @abc.abstractmethod
+    def run(self):
+        """Runs the command"""
+        return
+
+    @abc.abstractmethod
+    def output(self):
+        """Returns summary output of running the command in a dictionary"""
+        return
+
+    @abc.abstractmethod
+    def command(self):
+        """Returns the actual command line for running the command as a string"""
+        return
+
+    @abc.abstractmethod
+    def accepts(self):
+        """Returns a list of extensions the command accepts for input files"""
+        return
+
+    @abc.abstractmethod
+    def next(self):
+        """Returns the files that would be used post this stage of processing"""
+        return
