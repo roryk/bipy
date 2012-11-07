@@ -298,7 +298,7 @@ def RPKM_saturation(in_file, config, out_prefix=None):
 
     prefix = "RPKM_saturation"
     out_prefix = _get_out_prefix(in_file, config, out_prefix, prefix)
-    rpkm_saturation_file = out_prefix + "RPKM_saturation.pdf"
+    rpkm_saturation_file = out_prefix + ".saturation.pdf"
     gtf = _get_gtf(config)
     bed = _gtf2bed(gtf)
 
@@ -340,7 +340,7 @@ def _get_gtf(config):
 def _gtf2bed(gtf):
     bed = replace_suffix(gtf, "bed")
     if not file_exists(bed):
-        sh.gtf2bed(gtf, _out=bed)
+        sh.gtf2bigbed(gtf, _out=bed)
     return bed
 
 
