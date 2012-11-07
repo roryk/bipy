@@ -80,7 +80,7 @@ def bam_stat(in_file, config, out_prefix=None):
     """
     prefix = "bam_stat"
     out_prefix = _get_out_prefix(in_file, config, out_prefix, prefix)
-    out_file = out_prefix + ".bam_stat.txt"
+    out_file = out_prefix + ".txt"
     if file_exists(out_file):
         return out_file
 
@@ -132,7 +132,7 @@ def junction_annotation(in_file, config, out_prefix=None):
     """
     prefix = "junction"
     out_prefix = _get_out_prefix(in_file, config, out_prefix, prefix)
-    junction_file = out_prefix + ".splice_events.pdf"
+    junction_file = out_prefix + ".splice_junction.pdf"
     if file_exists(junction_file):
         return junction_file
     junction_run = sh.Command(which("junction_annotation.py"))
@@ -149,7 +149,7 @@ def junction_saturation(in_file, config, out_prefix=None):
     """
     prefix = "saturation"
     out_prefix = _get_out_prefix(in_file, config, out_prefix, prefix)
-    saturation_file = out_prefix + ".junctionSsaturation_plot.pdf"
+    saturation_file = out_prefix + ".junctionSaturation_plot.pdf"
     if file_exists(saturation_file):
         return saturation_file
 
@@ -239,6 +239,14 @@ def RPKM_saturation(in_file, config, out_prefix=None):
     RPKM_saturation_run(i=in_file, r=bed, o=out_prefix)
     return rpkm_saturation_file
 
+def _get_out_dir(in_file, config, out_prefix, prefix):
+    if not out_prefix:
+        out_dir = os.path.join(_results_dir(config),
+                               os.path.basename(in_file),
+                               prefix)
+        safe_makedir(out_dir)
+    return out_dir
+
 
 def _get_out_prefix(in_file, config, out_prefix, prefix):
     if not out_prefix:
@@ -271,17 +279,18 @@ class RseqcParser(object):
     parse a directory full of rseqc results
 
     """
-    DIRS = ["bam_stat", "clipping", "coverage", "junction",
+    DIRS = ["bam_sta", "clipping", "coverage", "junction",
             "saturation", "RPKM_count", "RPKM_saturation"]
 
     GRAPHS = ((os.path.join("RPKM_saturation", "RPKM_saturation.pdf"),
                "", 1.0),
               (os.path.join("clipping", "clipping.pdf"), "", 1.0),
-              (os.path.join("coverage", "coverage.pdf"),
+              (os.path.join("coverage", "coverage.geneBodyCoverage.pdf"),
                "", 1.0),
               (os.path.join("saturation", "junction_saturation.pdf"),
                "", 1.0),
-              (os.path.join("junction", "splice_events.pdf"), "", 1.0))
+              (os.path.join("junction", "junction.splice_junction.pdf"),
+               "", 1.0))
 
     INFO = (os.path.join("bam_stat", "bam_stat.txt"),
             os.path.join("RPKM_count", "RPKM_count.txt"))
