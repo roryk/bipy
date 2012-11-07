@@ -61,6 +61,7 @@ class TestRseqc(unittest.TestCase):
     def test_RPKM_saturation(self):
         out_file_RPKM_saturation = rseqc.RPKM_saturation(self.input_file,
                                                          self.config)
+        print out_file_RPKM_saturation
         self.assertTrue(file_exists(out_file_RPKM_saturation))
 
 
