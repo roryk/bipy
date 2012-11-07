@@ -15,7 +15,7 @@ dir:
 annotation:
   name: mm9
   genome: mm9
-  file: /n/home05/kirchner/hsph/biodata/genomes/Mmusculus/mm9/iGenomes/Ensembl/NCBIM37/Annotation/Genes/genes_with_chr.gtf
+  file: test/data/mouse_chr17.gtf
 
 program:
   htseq-count: htseq-count
