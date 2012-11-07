@@ -9,6 +9,7 @@ import pandas as pd
 from math import sqrt
 import abc
 from mako.template import Template
+from bipy.toolbox.reporting import LatexReport
 
 
 def _results_dir(config, prefix=""):
