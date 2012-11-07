@@ -11,6 +11,8 @@ import abc
 from mako.template import Template
 from bipy.toolbox.reporting import LatexReport
 
+def program_exists(path):
+    return which(path)
 
 def _results_dir(config, prefix=""):
 
@@ -29,6 +31,17 @@ def _results_dir(config, prefix=""):
 
 
 def _fetch_chrom_sizes(config):
+
+    PROGRAM = "fetchChromSizes"
+
+    if not program_exists(PROGRAM):
+        logger.error("%s is not in the path or is not executable. Make sure "
+                     "it is installed or go to "
+                     "http://hgdownload.cse.ucsc.edu/admin/exe/"
+                     "to download it." % (PROGRAM))
+        exit(1)
+
+
     if "annotation" not in config:
         logger.error("'annotation' must be in the yaml file. See example "
                      " configuration files")
@@ -55,6 +68,11 @@ def bam2bigwig(in_file, config, out_prefix=None):
     """
     assumes the library preparation was not strand specific for now
     """
+    PROGRAM = "bam2wig.py"
+    if not program_exists(PROGRAM):
+        logger.info("%s is not in the path or is not executable." % (PROGRAM))
+        exit(1)
+
     prefix = "bigwig"
     chrom_size_file = config["annotation"].get("chrom_size_file", None)
     out_prefix = _get_out_prefix(in_file, config, out_prefix, prefix)
@@ -63,29 +81,50 @@ def bam2bigwig(in_file, config, out_prefix=None):
     wiggle_file = out_prefix + ".wig"
 
     if not file_exists(wiggle_file):
-        bam2wig = sh.Command(which("bam2wig.py"))
+        bam2wig = sh.Command(which(PROGRAM))
         bam2wig(i=in_file, s=chrom_size_file, o=out_prefix)
 
     bigwig_file = out_prefix + ".bw"
 
-    if file_exists(bigwig_file):
-        return bigwig_file
+    return wig2bigwig(wiggle_file, chrom_size_file, bigwig_file)
 
-    sh.wigToBigWig(wiggle_file, chrom_size_file, bigwig_file)
-    return bigwig_file
+
+def wig2bigwig(wiggle_file, chrom_size_file, out_file):
+    """
+    convert wiggle file to bigwig file using the UCSC tool
+    """
+    PROGRAM = "wigToBigWig"
+    if not program_exists(PROGRAM):
+        logger.error("%s is not in the path or is not executable. Make sure "
+                     "it is installed or go to "
+                     "http://hgdownload.cse.ucsc.edu/admin/exe/"
+                     "to download it." % (PROGRAM))
+        exit(1)
+
+    if file_exists(out_file):
+        return out_file
+
+    wigToBigWig = sh.Command(which(PROGRAM))
+    wigToBigWig(wiggle_file, chrom_size_file, out_file)
+    return out_file
 
 
 def bam_stat(in_file, config, out_prefix=None):
     """
     dump read maping statistics from a SAM or BAM file to out_file
     """
+    PROGRAM = "bam_stat.py"
+    if not program_exists(PROGRAM):
+        logger.info("%s is not in the path or is not executable." % (PROGRAM))
+        exit(1)
+
     prefix = "bam_stat"
     out_prefix = _get_out_prefix(in_file, config, out_prefix, prefix)
     out_file = out_prefix + ".txt"
     if file_exists(out_file):
         return out_file
 
-    bam_stat_run = sh.Command(which("bam_stat.py"))
+    bam_stat_run = sh.Command(which(PROGRAM))
     bam_stat_run(i=in_file, _err=out_file)
 
     return out_file
@@ -95,13 +134,18 @@ def clipping_profile(in_file, config, out_prefix=None):
     """
     estimate the clipping profile of the reads
     """
+    PROGRAM = "clipping_profile.py"
+    if not program_exists(PROGRAM):
+        logger.info("%s is not in the path or is not executable." % (PROGRAM))
+        exit(1)
+
     prefix = "clipping"
     out_prefix = _get_out_prefix(in_file, config, out_prefix, prefix)
     clip_plot_file = out_prefix + ".pdf"
     if file_exists(clip_plot_file):
         return clip_plot_file
 
-    clip_run = sh.Command(which("clipping_profile.py"))
+    clip_run = sh.Command(which(PROGRAM))
     clip_run(i=in_file, o=out_prefix)
     # hack to get around the fact that clipping_profile saves the file in
     # the script execution directory
@@ -114,6 +158,11 @@ def genebody_coverage(in_file, config, out_prefix=None):
     """
     used to check the 5'/3' bias across transcripts
     """
+    PROGRAM = "geneBody_coverage.py"
+    if not program_exists(PROGRAM):
+        logger.info("%s is not in the path or is not executable." % (PROGRAM))
+        exit(1)
+
     prefix = "coverage"
     out_prefix = _get_out_prefix(in_file, config, out_prefix, prefix)
     coverage_plot_file = out_prefix + ".geneBodyCoverage.pdf"
@@ -122,7 +171,7 @@ def genebody_coverage(in_file, config, out_prefix=None):
 
     gtf = _get_gtf(config)
     bed = _gtf2bed(gtf)
-    coverage_run = sh.Command(which("geneBody_coverage.py"))
+    coverage_run = sh.Command(which(PROGRAM))
     coverage_run(i=in_file, r=bed, o=out_prefix)
     return coverage_plot_file
 
@@ -131,12 +180,17 @@ def junction_annotation(in_file, config, out_prefix=None):
     """
     compile novel/known information about splice junctions
     """
+    PROGRAM = "junction_annotation.py"
+    if not program_exists(PROGRAM):
+        logger.info("%s is not in the path or is not executable." % (PROGRAM))
+        exit(1)
+
     prefix = "junction"
     out_prefix = _get_out_prefix(in_file, config, out_prefix, prefix)
     junction_file = out_prefix + ".splice_junction.pdf"
     if file_exists(junction_file):
         return junction_file
-    junction_run = sh.Command(which("junction_annotation.py"))
+    junction_run = sh.Command(which(PROGRAM))
     gtf = _get_gtf(config)
     bed = _gtf2bed(gtf)
     junction_run(i=in_file, o=out_prefix, r=bed)
@@ -148,13 +202,18 @@ def junction_saturation(in_file, config, out_prefix=None):
     check if splicing is deep enough to perform alternative splicing
     analysis
     """
+    PROGRAM = "junction_saturation.py"
+    if not program_exists(PROGRAM):
+        logger.info("%s is not in the path or is not executable." % (PROGRAM))
+        exit(1)
+
     prefix = "saturation"
     out_prefix = _get_out_prefix(in_file, config, out_prefix, prefix)
     saturation_file = out_prefix + ".junctionSaturation_plot.pdf"
     if file_exists(saturation_file):
         return saturation_file
 
-    saturation_run = sh.Command(which("junction_saturation.py"))
+    saturation_run = sh.Command(which(PROGRAM))
     gtf = _get_gtf(config)
     bed = _gtf2bed(gtf)
     saturation_run(i=in_file, o=out_prefix, r=bed)
@@ -165,6 +224,11 @@ def RPKM_count(in_file, config, out_prefix=None):
     """
     produce RPKM
     """
+    PROGRAM = "RPKM_count.py"
+    if not program_exists(PROGRAM):
+        logger.info("%s is not in the path or is not executable." % (PROGRAM))
+        exit(1)
+
     prefix = "RPKM_count"
     out_prefix = _get_out_prefix(in_file, config, out_prefix, prefix)
     rpkm_count_file = out_prefix + "_read_count.xls"
@@ -172,7 +236,7 @@ def RPKM_count(in_file, config, out_prefix=None):
     bed = _gtf2bed(gtf)
     if file_exists(rpkm_count_file):
         return rpkm_count_file
-    RPKM_count_run = sh.Command(which("RPKM_count.py"))
+    RPKM_count_run = sh.Command(which(PROGRAM))
     RPKM_count_run(i=in_file, r=bed, o=out_prefix)
     return rpkm_count_file
 
@@ -227,6 +291,11 @@ def RPKM_saturation(in_file, config, out_prefix=None):
     """
     estimate the precision of RPKM calculation by resampling
     """
+    PROGRAM = "RPKM_saturation.py"
+    if not program_exists(PROGRAM):
+        logger.info("%s is not in the path or is not executable." % (PROGRAM))
+        exit(1)
+
     prefix = "RPKM_saturation"
     out_prefix = _get_out_prefix(in_file, config, out_prefix, prefix)
     rpkm_saturation_file = out_prefix + "RPKM_saturation.pdf"
@@ -236,7 +305,7 @@ def RPKM_saturation(in_file, config, out_prefix=None):
     if file_exists(rpkm_saturation_file):
         return rpkm_saturation_file
 
-    RPKM_saturation_run = sh.Command(which("RPKM_saturation.py"))
+    RPKM_saturation_run = sh.Command(which(PROGRAM))
     RPKM_saturation_run(i=in_file, r=bed, o=out_prefix)
     return rpkm_saturation_file
 
