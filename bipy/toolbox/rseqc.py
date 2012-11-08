@@ -2,17 +2,19 @@ import os
 from bipy.utils import replace_suffix, which, remove_suffix, append_stem
 import sh
 from bipy.log import logger
-from bcbio.utils import file_exists, safe_makedir
+from bcbio.utils import file_exists, safe_makedir, add_full_path
 from os.path import basename
 import glob
 import pandas as pd
 from math import sqrt
 import abc
 from mako.template import Template
-from bipy.toolbox.reporting import LatexReport
+from bipy.toolbox.reporting import LatexReport, safe_latex
+
 
 def program_exists(path):
     return which(path)
+
 
 def _results_dir(config, prefix=""):
 
@@ -40,7 +42,6 @@ def _fetch_chrom_sizes(config):
                      "http://hgdownload.cse.ucsc.edu/admin/exe/"
                      "to download it." % (PROGRAM))
         exit(1)
-
 
     if "annotation" not in config:
         logger.error("'annotation' must be in the yaml file. See example "
@@ -371,7 +372,7 @@ class RseqcParser(object):
     def get_rseqc_graphs(self):
         final_graphs = []
         for f, caption, size in self.GRAPHS:
-            final_f = os.path.join(self._dir, f)
+            final_f = add_full_path(os.path.join(self._dir, f))
             if file_exists(final_f):
                 final_graphs.append((final_f, caption, size))
         return final_graphs
@@ -395,14 +396,29 @@ class RseqcReport(LatexReport):
     def _add_captions(self, figures):
         new_figures = []
         for figure in figures:
-            filename = os.path.basename(figure)
+            filename = os.path.basename(figure[0])
             caption = self.CAPTIONS.get(filename, "")
             new_figures.append((figure[0], caption, figure[2]))
         return new_figures
 
+    def clean_figures(self, figures):
+        new_figures = []
+        for figure in figures:
+            filename = safe_latex(figure[0])
+            new_figures.append((filename, figure[1], figure[2]))
+        return new_figures
+
+
+
     def generate_report(self, name, figures=None):
         template = Template(self._template)
-        section = template.render(name=name, figures=figures)
+        clean_name = safe_latex(name)
+        #clean_figures = self.clean_figures(figures)
+        #section = template.render(name=clean_name, figures=clean_figures)
+        clean_figures = [(remove_suffix(figure[0]), figure[1], figure[2])
+                         for figure in figures]
+        section = template.render(name=clean_name, figures=clean_figures)
+        return section
 
     _template = r"""
 \subsection*{Rseqc report for ${name}}
@@ -411,7 +427,7 @@ class RseqcReport(LatexReport):
     % for i, (figure, caption, size) in enumerate (figures):
     \begin{figure}[htbp]
         \centering
-        \includegraphics[width=${size}\linewidth] {${figure}}
+        \includegraphics[width=${size}\linewidth,natwidth=610,natheight=64]{${figure}}
         \caption{${caption}}
     \end{figure}
     % endfor
