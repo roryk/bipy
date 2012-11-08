@@ -8,6 +8,7 @@ import sh
 import os
 import abc
 from itertools import repeat
+from bipy.utils import remove_suffix
 
 
 def safe_latex(to_fix):
@@ -28,17 +29,22 @@ class LatexPdf(object):
     def generate_pdf(self, sections=None, out_file=None):
         out_tmpl = Template(self._base_template)
         if not out_file:
-            out_file = "latex.tex"
-        with open(out_file, "w") as out_handle:
+            latex_file = "latex.tex"
+            out_file = "latex.pdf"
+        else:
+            latex_file = remove_suffix(out_file) + ".tex"
+
+        with open(latex_file, "w") as out_handle:
             out_handle.write(out_tmpl.render(sections=sections))
-        sh.pdflatex(out_file)
-        return "%s.pdf" % os.path.splitext(out_file)[0]
+        sh.pdflatex(latex_file)
+        return out_file
 
     _base_template = r"""
 \documentclass{article}
 \usepackage{fullpage}
 \usepackage{graphicx}
 \usepackage{placeins}
+\usepackage[multidot]{grffile}
 
 \begin{document}
 % for section in sections:
