@@ -5,6 +5,5 @@ dist/
 *egg*
 .#*
 ref/
-log/
 dist/
 .fuse*
