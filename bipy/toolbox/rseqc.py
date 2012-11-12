@@ -311,6 +311,8 @@ def fix_RPKM_count_file(in_file, out_file=None):
                                                   x.rsplit("_", 2)[0])
         rpkm["feature"] = rpkm["accession"].apply(lambda x:
                                                   x.rsplit("_", 2)[1])
+        # remove the '#' character since it denotes a comment
+        rpkm.rename(columns={"#chrom": "chrom"})
 
     with file_transaction(out_file) as tmp_out_file:
         rpkm.to_csv(tmp_out_file, sep="\t", index=False)
