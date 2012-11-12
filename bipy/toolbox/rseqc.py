@@ -10,6 +10,7 @@ from math import sqrt
 import abc
 from mako.template import Template
 from bipy.toolbox.reporting import LatexReport, safe_latex
+from bcbio.distributed.transaction import file_transaction
 
 
 def program_exists(path):
@@ -57,7 +58,9 @@ def _fetch_chrom_sizes(config):
     if file_exists(chrom_size_file):
         return chrom_size_file
 
-    sh.fetchChromSizes(genome, _out=chrom_size_file)
+    with file_transaction(chrom_size_file) as tmp_chrom_size_file:
+        sh.fetchChromSizes(genome, _out=tmp_chrom_size_file)
+
     if not file_exists(chrom_size_file):
         logger.error("chromosome size file does not exist. Check "
                      "'annotation': 'genome' to make sure it is valid.")
@@ -106,7 +109,8 @@ def wig2bigwig(wiggle_file, chrom_size_file, out_file):
         return out_file
 
     wigToBigWig = sh.Command(which(PROGRAM))
-    wigToBigWig(wiggle_file, chrom_size_file, out_file)
+    with file_transaction(out_file) as tx_out_file:
+        wigToBigWig(wiggle_file, chrom_size_file, tx_out_file)
     return out_file
 
 
@@ -126,7 +130,8 @@ def bam_stat(in_file, config, out_prefix=None):
         return out_file
 
     bam_stat_run = sh.Command(which(PROGRAM))
-    bam_stat_run(i=in_file, _err=out_file)
+    with file_transaction(out_file) as tx_out_file:
+        bam_stat_run(i=in_file, _err=tx_out_file)
 
     return out_file
 
@@ -286,6 +291,31 @@ def merge_RPKM(in_dir):
 
     common.to_csv(merged_file, sep="\t")
     return merged_file
+
+
+def fix_RPKM_count_file(in_file, out_file=None):
+    """
+    splits the RPKM_count file id column into two separate columns;
+    one with the id and the other with the feature
+    """
+
+    if not out_file:
+        out_file = append_stem(in_file, "fixed")
+
+    if file_exists(out_file):
+        return out_file
+
+    with open(in_file) as in_handle:
+        rpkm = pd.read_table(in_handle)
+        rpkm["gene_id"] = rpkm["accession"].apply(lambda x:
+                                                  x.rsplit("_", 2)[0])
+        rpkm["feature"] = rpkm["accession"].apply(lambda x:
+                                                  x.rsplit("_", 2)[1])
+
+    with file_transaction(out_file) as tmp_out_file:
+        rpkm.to_csv(tmp_out_file, sep="\t", index=False)
+
+    return out_file
 
 
 def RPKM_saturation(in_file, config, out_prefix=None):
