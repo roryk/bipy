@@ -17,6 +17,12 @@ ORG_TO_ENSEMBL = {"opossum": {"gene_ensembl": "mdomestica_gene_ensembl",
 
 def annotate_table_with_biomart(in_file, join_column,
                                 filter_type, organism, out_file=None):
+    """
+    join_column is the column to combine the perform the lookups on
+    filter_type describes the type of the join_column (see the getBM
+    documentation in R for details), organism is the english name of
+    the organism
+    """
 
     if organism not in ORG_TO_ENSEMBL:
         logger.error("organism not supported")
