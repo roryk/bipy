@@ -7,6 +7,7 @@ import functools
 import stat
 import difflib
 from itertools import repeat
+from functools import reduce
 
 
 def get_stem(filename):
@@ -300,3 +301,23 @@ def dict_to_vectors(d):
         ks += list(repeat(k, len(v)))
         vs += v
     return (ks, vs)
+
+
+class dotdict(dict):
+    """
+    access dictioanry items via dot syntax
+    via: http://parand.com/say/index.php/2008/10/24/python-dot-notation-dictionary-access/:
+    """
+
+    def __getattr__(self, attr):
+        return self.get(attr, None)
+    __setattr__ = dict.__setitem__
+    __delattr__ = dict.__delitem__
+
+
+def nested_lookup(d, t):
+    """
+    look up if you can get a tuple of values from a nested dictionary,
+    each item in the tuple a deeper layer
+    """
+    return reduce(lambda d, t: d.get(t, {}), t, d)
