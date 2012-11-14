@@ -9,6 +9,9 @@ import os
 import abc
 from itertools import repeat
 from bipy.utils import remove_suffix
+from bcbio.distributed.transaction import file_transaction
+from bcbio.utils import curdir_tmpdir
+import shutil
 
 
 def safe_latex(to_fix):
@@ -34,10 +37,18 @@ class LatexPdf(object):
         else:
             latex_file = remove_suffix(out_file) + ".tex"
 
-        with open(latex_file, "w") as out_handle:
-            out_handle.write(out_tmpl.render(sections=sections))
+        with open(latex_file, "w") as latex_handle:
+            latex_handle.write(out_tmpl.render(sections=sections))
         sh.pdflatex(latex_file)
+
         return out_file
+
+        #        sh.pdflatex(latex_file,
+        #with file_transaction(latex_file) as tmp_latex_file:
+        #     with open(tmp_latex_file, "w") as latex_handle:
+        #        latex_handle.write(out_tmpl.render(sections=sections))
+        #        sh.pdflatex(tmp_
+        #return out_file
 
     _base_template = r"""
 \documentclass{article}
