@@ -55,7 +55,7 @@ def load_count_file_as_matrix(in_file, r):
     r('''
     count_table = read.table(in_file, header=TRUE, row.names=1)
     count_matrix = as.matrix(count_table)
-    colnames(count_matrix) = NULL
+    dimnames(count_matrix) = NULL
     ''')
     return r
 
@@ -64,10 +64,11 @@ def make_count_set(conds, r):
     """
     returns an r session with a new count data set loaded as cds
     """
-    r.assign('conds', vectors.StrVector.factor(vectors.StrVector(conds)))
+    #r.assign('conds', vectors.StrVector.factor(vectors.StrVector(conds)))
+    r.assign('conds', vectors.StrVector(conds))
     r('''
     require('DSS')
-    cds = newSeqCountSet(counts, conds)
+    cds = newSeqCountSet(count_matrix, as.character(conds))
     ''')
     return r
 
@@ -84,7 +85,8 @@ def run(in_file, conds, out_prefix):
     r('''
     cds = estNormFactors(cds)
     cds = estDispersion(cds)
-    res = waldTest(cds, 0, 1)
+    conditions = levels(factor(conds))
+    res = waldTest(cds, conditions[0], conditions[1])
     write.table(res, file=dss_table_out, quote=FALSE,
     row.names=FALSE, sep="\t")
     ''')
