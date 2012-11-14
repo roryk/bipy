@@ -52,7 +52,7 @@ def _setup_config(config):
     return config
 
 
-def AbstractRunner(object):
+class AbstractRunner(object):
 
     @abc.abstractmethod
     def run(self):
@@ -78,3 +78,22 @@ def AbstractRunner(object):
     def next(self):
         """Returns the files that would be used post this stage of processing"""
         return
+
+
+class AbstractStage(object):
+
+    def __init__(self, config):
+        self.config = config
+        self._validate_config()
+
+    def _validate_config(self):
+        if "stage" not in self.config:
+            raise ValueError('Could not find "stage" in the config file.')
+
+    @property
+    def stages(self):
+        return self.config["stage"]
+
+    def run_start_message(self, in_file):
+        print "Starting lol. %s" % (self.stage)
+        #logger.info("Starting %s on %s" % (self.stage, in_file))
