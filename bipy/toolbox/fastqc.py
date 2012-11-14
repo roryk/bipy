@@ -1,14 +1,15 @@
 """ tool to run fastqc on FASTQ/SAM/BAM files from HTS experiments """
 import subprocess
 from bipy.utils import flatten, remove_suffix
-from bcbio.utils import safe_makedir
+from bcbio.utils import safe_makedir, file_exists
 import os
 import logging
 import abc
 from mako.template import Template
 from bipy.toolbox.reporting import LatexReport, safe_latex
-from bipy.pipeline import AbstractRunner
+from bipy.pipeline import AbstractStage
 import sh
+import zipfile
 
 logger = logging.getLogger("bipy")
 
@@ -93,9 +94,6 @@ def run(input_file, fastqc_config, config):
     return outfile
 
 
-
-
-
 class FastQCParser(object):
     """
     Parses the directory of FastQC output to prepare a report for
@@ -113,6 +111,11 @@ class FastQCParser(object):
               ("sequence_length_distribution.png", "", 1.0))
 
     def __init__(self, base_dir):
+        (base, ext) = os.path.splitext(base_dir)
+        if ext == ".zip":
+            with zipfile.ZipFile(base_dir) as zip_handle:
+                zip_handle.extractall(os.path.dirname(base))
+            base_dir = base
         self._dir = base_dir
         self._max_seq_size = 45
         self._max_overrep = 20
@@ -164,6 +167,19 @@ class FastQCParser(object):
         return out
 
 
+def report(base_dir, report_type=None):
+    REPORT_LOOKUP = {"rnaseq": RNASeqFastQCReport}
+
+    parser = FastQCParser(base_dir)
+    graphs = parser.get_fastqc_graphs()
+    (stats, overrep) = parser.get_fastqc_summary()
+    name = os.path.basename(base_dir)
+
+    report_handler = REPORT_LOOKUP.get(report_type, FastQCReport)
+    return report_handler.generate_report(name, summary=stats,
+                                          figures=graphs, overrep=overrep)
+
+
 class FastQCReport(LatexReport):
 
     CAPTIONS = {"per_base_quality.png": "",
@@ -174,9 +190,6 @@ class FastQCReport(LatexReport):
                 "per_bases_n_content.png": "",
                 "per_sequence_quality.png": "",
                 "sequence_length_distribution.png": ""}
-
-    def __init__(self):
-        pass
 
     def template(self):
         return self._template
@@ -189,9 +202,12 @@ class FastQCReport(LatexReport):
             new_figures.append((figure[0], caption, figure[2]))
         return new_figures
 
-    def generate_report(self, name, summary=None, figures=None, overrep=None):
+    @classmethod
+    def generate_report(self, name=None, summary=None, figures=None,
+                        overrep=None):
         template = Template(self._template)
-        section = template.render(name=name, summary=summary,
+        safe_name = safe_latex(name)
+        section = template.render(name=safe_name, summary=summary,
                                   summary_table=summary, figures=figures,
                                   overrep=overrep)
         return section
@@ -254,3 +270,33 @@ class RNASeqFastQCReport(FastQCReport):
                 "per_bases_n_content.png": "",
                 "per_sequence_quality.png": "",
                 "sequence_length_distribution.png": ""}
+
+
+class FastQCStage(AbstractStage):
+
+    stage = "fastqc"
+
+    def __init__(self, config):
+        self.config = config
+        super(FastQCStage, self).__init__(self.config)
+        self.fastqc_config = config["stage"]["fastqc"]
+
+    def _validate_config(self):
+        if self.stage not in self.stages:
+            raise ValueError('Could not find %s as a stage' % (self.stage))
+
+    def _start_message(self, in_file):
+        logger.info("Starting %s on %s" % (self.stage, in_file))
+
+    def _end_message(self, in_file):
+        logger.info("%s complete on %s." % (self.stage, in_file))
+
+    def _check_run(self, in_file):
+        if not file_exists(in_file):
+            raise IOError('%s not found.' % (in_file))
+
+    def run(self, in_file):
+        self._start_message(in_file)
+        out_file = run(in_file, self.fastqc_config, self.config)
+        self._end_message(in_file)
+        return out_file
