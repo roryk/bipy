@@ -1,0 +1,14 @@
+[2012-11-14 13:24:09,155] Starting the cluster with 4 nodes.
+[2012-11-14 13:24:19,985] Waiting for 4 engines to come up.
+[2012-11-14 13:24:29,987] Cluster up.
+[2012-11-14 13:26:11,200] Starting the cluster with 4 nodes.
+[2012-11-14 13:26:51,943] Starting the cluster with 4 nodes.
+[2012-11-14 13:27:44,468] Starting the cluster with 4 nodes.
+[2012-11-14 15:32:39,190] Starting the cluster with 4 nodes.
+[2012-11-14 15:32:49,980] Cluster up.
+[2012-11-14 15:34:30,330] Starting fastqc on test/data/test_fastq_1.fastq
+[2012-11-14 15:34:50,725] Starting fastqc on test/data/test_fastq_1.fastq
+[2012-11-14 15:35:16,206] fastqc complete on test/data/test_fastq_1.fastq.
+[2012-11-14 15:56:31,060] Starting the cluster with 4 nodes.
+[2012-11-14 15:56:41,515] Waiting for 4 engines to come up.
+[2012-11-14 15:56:51,517] Cluster up.
