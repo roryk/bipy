@@ -54,7 +54,8 @@ def load_count_file_as_matrix(in_file, r):
     """
     r.assign('in_file', in_file)
     r('''
-    count_table = read.table(in_file, header=TRUE, row.names=1)
+    #count_table = read.table(in_file, header=TRUE, row.names=1)
+    count_table = read.table(in_file, header=TRUE)
     count_matrix = as.matrix(count_table)
     dimnames(count_matrix) = NULL
     ''')
@@ -74,12 +75,13 @@ def make_count_set(conds, r):
     return r
 
 
-def run(in_file, conds, out_prefix):
+def run(in_file, conds, tests, out_prefix):
     dss_table_out = out_prefix + ".dss.txt"
-    (testA, testB) = list(set(conds))
     safe_makedir(os.path.dirname(out_prefix))
     r = robjects.r
     r.assign('dss_table_out', dss_table_out)
+    testA = tests[0]
+    testB = tests[1]
     r.assign('testA', testA)
     r.assign('testB', testB)
     r = load_count_file_as_matrix(in_file, r)
@@ -88,10 +90,14 @@ def run(in_file, conds, out_prefix):
     cds = estNormFactors(cds)
     cds = estDispersion(cds)
     res = waldTest(cds, testA, testB)
-    write.table(res, file=dss_table_out, quote=FALSE,
-    row.names=FALSE, sep="\t")
-    #write.table(dispersion(cds), file=dss_table_out, quote=FALSE,
-    #row.names=FALSE, sep="\t") 
+    write.table(res, file=dss_table_out, quote=FALSE, row.names=FALSE, sep="\t")
     ''')
+
+    #r('''
+    #cds = estNormFactors(cds)
+    #cds = estDispersion(cds)
+    #res = waldTest(cds, testA, testB)
+    #write.table(res, file=dss_table_out, quote=FALSE, row.names=FALSE, sep="\t")
+    #''')
 
     return dss_table_out

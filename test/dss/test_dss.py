@@ -14,7 +14,7 @@ class TestDss(unittest.TestCase):
     def test_run(self):
         out_prefix = "results/tests/dss/test_dss"
         safe_makedir(os.path.dirname(out_prefix))
-        result = dss.run(self.count_file, self.conds, out_prefix=out_prefix)
+        result = dss.run(self.count_file, self.conds, ("untreat", "treat"), out_prefix=out_prefix)
         self.assertTrue(file_exists(result))
 
 if __name__ == "__main__":
