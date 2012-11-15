@@ -4,8 +4,39 @@ from bipy.utils import (replace_suffix, which, flatten,
 import os
 import logging
 from bcbio.utils import file_exists
+import sh
 
 logger = logging.getLogger(__name__)
+
+def intersect(bam_file, bed_file, exclude=False, out_file=None):
+    """
+    return the entries in bam_file that overlap (exclude=False) or
+    do not overlap (exclude=True) with a feature bed_file.
+
+    """
+
+    (bam_base, bam_ext) = os.path.splitext(bam_file)
+    (bed_base, bed_ext) = os.path.splitext(bed_file)
+
+    if not out_file:
+        out_prefix = bam_base + "_vs_" + bed_base
+        if exclude:
+            out_file = out_prefix + ".nointersect" + bam_ext
+        else:
+            out_file = out_prefix + ".intersect" + bam_ext
+
+        if file_exists(out_file):
+            return out_file
+
+    if exclude:
+        exclude_arg = "-v"
+    else:
+        exclude_arg = ""
+
+        sh.bedtools.intersect("-u", exclude_arg, abam=bam_file, b=bed_file,
+                              _out=out_file)
+
+    return out_file
 
 
 def count_overlaps(in_file, bed, out_file=None):
