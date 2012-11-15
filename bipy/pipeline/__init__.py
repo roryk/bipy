@@ -1,13 +1,15 @@
 """
 general functions for handling common pipeline steps
 """
-
+from bipy.pipeline.stages import STAGE_LOOKUP
+from bipy.cluster import start_cluster, stop_cluster
 from bcbio.utils import safe_makedir, file_exists
-from bipy.log import logger
+from bipy.log import logger, setup_logging
 import datetime
 import os
 import yaml
 import abc
+from Queue import Queue
 
 
 def setup_pipeline(config):
@@ -80,20 +82,64 @@ class AbstractRunner(object):
         return
 
 
-class AbstractStage(object):
+class GenericPipeline(object):
 
-    def __init__(self, config):
+    def __init__(self, in_files, config):
+        self.in_files = in_files
         self.config = config
-        self._validate_config()
+        setup_logging(self.config)
+        start_cluster(self.config)
+        from bipy.cluster import view
+        self.view = view
+        self.curr_files = [in_files]
+        self.to_run = Queue()
+        map(self.to_run.put, self.setup_stages(config["run"]))
 
-    def _validate_config(self):
-        if "stage" not in self.config:
-            raise ValueError('Could not find "stage" in the config file.')
+    def setup_stages(self, stages):
+        stage_classes = map(STAGE_LOOKUP.get, stages)
+        stage_objects = [stage(self.config) for stage in stage_classes]
+        return stage_objects
 
-    @property
-    def stages(self):
-        return self.config["stage"]
+    def validate_config(self):
+        """
+        generic config file validator for things that should be in
+        all pipeline configuration files
+        """
+        WANT = ["stage", "run", "dir", "cluster"]
+        for w in WANT:
+            if w not in self.config:
+                raise ValueError('Could not find %s in the config file')
 
-    def run_start_message(self, in_file):
-        print "Starting lol. %s" % (self.stage)
-        #logger.info("Starting %s on %s" % (self.stage, in_file))
+    def get_next_files(self):
+        return self.curr_files[-1]
+
+    def set_next_files(self, files):
+        self.curr_files.append(files)
+
+    def process(self):
+        """
+        simple pipeline processor. can't handle tasks where stages
+        are forked off but can ignore the output for any stage.
+
+        """
+        # keep pulling items off of the queue until it is empty
+        while not self.to_run.empty():
+            stage = self.to_run.get()
+            next_files = self.get_next_files()
+
+        # run in a non-blocked manner since we are not waiting on them
+        if not stage.keep:
+            self.view.map(stage, next_files, block=False)
+            yield None
+        else:
+            processed = self.view.map(stage, self.get_next_files())
+            yield processed
+            self.set_next_files(processed)
+
+    def process_next_stage(self):
+        stage = self.to_run.get()
+        if not stage:
+            return None
+        processed = self.view.map(stage, self.get_next_files)
+        self.set_next_files(processed)
+        return processed
