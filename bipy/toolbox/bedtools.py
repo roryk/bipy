@@ -34,8 +34,8 @@ def intersect(bam_file, bed_file, exclude=False, out_file=None):
     else:
         exclude_arg = ""
 
-        sh.bedtools.intersect("-u", exclude_arg, "-abam", bam_file, b=bed_file,
-                              _out=out_file)
+    sh.bedtools.intersect("-u", exclude_arg, "-abam", bam_file, b=bed_file,
+                          _out=out_file)
 
     return out_file
 
