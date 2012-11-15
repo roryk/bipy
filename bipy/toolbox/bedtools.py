@@ -8,6 +8,7 @@ import sh
 
 logger = logging.getLogger(__name__)
 
+
 def intersect(bam_file, bed_file, exclude=False, out_file=None):
     """
     return the entries in bam_file that overlap (exclude=False) or
@@ -25,15 +26,15 @@ def intersect(bam_file, bed_file, exclude=False, out_file=None):
         else:
             out_file = out_prefix + ".intersect" + bam_ext
 
-        if file_exists(out_file):
-            return out_file
+    if file_exists(out_file):
+        return out_file
 
     if exclude:
         exclude_arg = "-v"
     else:
         exclude_arg = ""
 
-        sh.bedtools.intersect("-u", exclude_arg, abam=bam_file, b=bed_file,
+        sh.bedtools.intersect("-u", exclude_arg, "-abam", bam_file, b=bed_file,
                               _out=out_file)
 
     return out_file
