@@ -7,6 +7,7 @@ import rpy2.robjects as robjects
 import rpy2.robjects.vectors as vectors
 from bcbio.utils import safe_makedir
 import os
+from collections import OrderedDict
 
 
 def _plot_disp_ests(r, dispersion_plot_out):
@@ -53,7 +54,8 @@ def load_count_file_as_matrix(in_file, r):
     """
     r.assign('in_file', in_file)
     r('''
-    count_table = read.table(in_file, header=TRUE, row.names=1)
+    #count_table = read.table(in_file, header=TRUE, row.names=1)
+    count_table = read.table(in_file, header=TRUE)
     count_matrix = as.matrix(count_table)
     dimnames(count_matrix) = NULL
     ''')
@@ -68,27 +70,34 @@ def make_count_set(conds, r):
     r.assign('conds', vectors.StrVector(conds))
     r('''
     require('DSS')
-    cds = newSeqCountSet(count_matrix, as.character(conds))
+    cds = newSeqCountSet(count_matrix, conds)
     ''')
     return r
 
 
-def run(in_file, conds, out_prefix):
+def run(in_file, conds, tests, out_prefix):
     dss_table_out = out_prefix + ".dss.txt"
-
     safe_makedir(os.path.dirname(out_prefix))
     r = robjects.r
     r.assign('dss_table_out', dss_table_out)
-
+    testA = tests[0]
+    testB = tests[1]
+    r.assign('testA', testA)
+    r.assign('testB', testB)
     r = load_count_file_as_matrix(in_file, r)
     r = make_count_set(conds, r)
     r('''
     cds = estNormFactors(cds)
     cds = estDispersion(cds)
-    conditions = levels(factor(conds))
-    res = waldTest(cds, conditions[0], conditions[1])
-    write.table(res, file=dss_table_out, quote=FALSE,
-    row.names=FALSE, sep="\t")
+    res = waldTest(cds, testA, testB)
+    write.table(res, file=dss_table_out, quote=FALSE, row.names=FALSE, sep="\t")
     ''')
+
+    #r('''
+    #cds = estNormFactors(cds)
+    #cds = estDispersion(cds)
+    #res = waldTest(cds, testA, testB)
+    #write.table(res, file=dss_table_out, quote=FALSE, row.names=FALSE, sep="\t")
+    #''')
 
     return dss_table_out
