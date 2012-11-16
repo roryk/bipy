@@ -1,0 +1,25 @@
+cluster:
+  name: odyssey
+  profile: lsf
+  cores: 4
+
+dir:
+  results: results
+
+input:
+  - test/data/test_fastq_1.fastq
+  - test/data/test_fastq_2.fastq
+
+log_dir: log
+
+program:
+  fastqc: fastqc
+
+stage:
+  fastqc:
+    program: fastqc
+    options:
+      - [--noextract]
+
+run:
+  [fastqc]
