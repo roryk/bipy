@@ -24,6 +24,7 @@ client = None
 view = None
 direct_view = None
 
+
 def load_config(config_file):
     """ load the config file, overwriting the defaults if it has them """
     global config
@@ -84,8 +85,11 @@ class Cluster(object):
         """starts the cluster and connects the client to the controller"""
         narg = "--n=%d" % (self.n)
         parg = "--profile=%s" % (self.profile)
-        #"--work-dir=" + str(self._work),
-    #                                       "--cluster-id=" + self._cluster_id,
+        """
+         XXX: in the future, add "--cluster-id=" + self._cluster_id to
+         this, to run each new cluster with a different ID, so we
+         can reuse the same profile. right now there is a bug in
+         ipython that doesn't support this"""
         return_code = subprocess.call(["ipcluster", "start",
                                        "--daemonize=True",
                                        "--delay=" + str(self.delay),
@@ -93,11 +97,11 @@ class Cluster(object):
                                        narg, parg])
 
     def client(self):
-        """ returns a handle to the client
-        XXX: might need to apss cluster-id to this """
+        """ returns a handle to the client """
+
+        # add cluster_id=self._cluster_id to this call when the bug
+        # is fixed in iPython
         if not self._client:
-            #         self._client = Client(profile=self.profile,
-            #                      cluster_id = self._cluster_id)
             self._client = Client(profile=self.profile)
             return self._client
         return self._client
@@ -129,8 +133,8 @@ class Cluster(object):
 
     def stop(self):
         parg = "--profile=%s" % (self.profile)
-        #carg = "--cluster-id=%s" % (self._cluster_id)
-        #return_code = subprocess.call(["ipcluster", "stop", parg, carg])
+        # add carg = "--cluster-id=%s" % (self._cluster_id) when
+        # this gets fixed in iPython
         return_code = subprocess.call(["ipcluster", "stop", parg])
 
     def is_up(self):
@@ -144,7 +148,6 @@ class Cluster(object):
             not_up = self.n - up
             if not_up > 0:
                 logger.info("Waiting for %d engines to come up." %(not_up))
-                #self.new_client()
                 return False
             else:
                 return True
