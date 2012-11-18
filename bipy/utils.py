@@ -10,6 +10,28 @@ from itertools import repeat
 from functools import reduce
 
 
+def in2out(in_file, word, transform=True, out_dir=None):
+    """
+    creates an out_file name from an in_file name by adding word to the
+    in_file name and writing it to the output_directory if specified.
+    if transform is True, the word replaces the extension of in_file.
+    if False it adds it to the stem
+    transform: in2out("test.bam", "sam", transform=True) -> "test.sam"
+    non transform: in2out("test.bam", "sam", transform=False) -> "test_bam.sam"
+
+    """
+    (base, ext) = os.path.splitext(in_file)
+    if out_dir:
+        base = os.path.join(out_dir, os.path.basename(base))
+
+    if transform:
+        return "%s.%s" % (base, word)
+
+    else:
+        return "%s_%s.%s" % (base, ext, word)
+
+
+
 def get_stem(filename):
     return os.path.basename(remove_suffix(filename))
 
