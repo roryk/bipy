@@ -29,6 +29,7 @@ def setup_pipeline(config):
 
     return config
 
+
 def _write_config(config):
     """
     output a yaml file of the configuration for this run in the results
@@ -38,6 +39,7 @@ def _write_config(config):
                              "config.yaml")
     with open(yaml_file, "w") as out_handle:
         out_handle.write(yaml.dump(config))
+
 
 def _setup_config(config):
     """
