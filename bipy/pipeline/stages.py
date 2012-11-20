@@ -160,7 +160,7 @@ class GeminiLoader(AbstractStage):
                                gemini_stage.get("db", "combined.db"))
 
     def _load_gemini(self, in_file):
-        sh.gemini.load(db, v=in_file, t=self.type)
+        sh.gemini.load(self.db, v=in_file, t=self.type)
 
     def __call__(self, in_file):
         self._start_message(in_file)
