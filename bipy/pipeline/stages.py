@@ -126,6 +126,7 @@ class IlluminaVCFFixer(AbstractStage):
         self._start_message(vcf_dir)
         out_file = self._run_fixer(vcf_dir)
         self._end_message(vcf_dir)
+        return out_file
 
 
 class SnpEff(AbstractStage):
