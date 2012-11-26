@@ -1,10 +1,13 @@
 from bipy.toolbox import fastqc
 from bipy.log import logger
-from bcbio.utils import file_exists
+from bcbio.utils import file_exists, safe_makedir
+from bipy.utils import append_stem, replace_suffix
 import sh
 import os
 import csv
 from bcbio.variation import effects
+from bcbio.distributed.transaction import file_transaction
+import uuid
 
 
 class AbstractStage(object):
@@ -86,6 +89,8 @@ class IlluminaVCFFixer(AbstractStage):
         self.fixer = os.path.join(config["program"]["bcbio.variation"],
                                   self.variation_version)
         self.sample_lookup = self._lane2sample(self.config)
+        self.java_memory = "-Xmx" + self.config["algorithm"].get("java_memory",
+                                                                 "1g")
 
     def _lane2sample(self, config):
         """
@@ -113,11 +118,12 @@ class IlluminaVCFFixer(AbstractStage):
             raise ValueError("Could not find lane %s in the lookup table "
                              "%s" % (self.sample_lookup))
 
-        out_file = os.path.join(vcf_dir, sample + ".vcf")
+        out_file = os.path.join(vcf_dir, "Variations", sample + ".vcf")
         if file_exists(out_file):
             return out_file
 
-        sh.java("-jar", self.fixer, "variant-utils", "illumina", vcf_dir,
+        sh.java(self.java_memory,
+                "-jar", self.fixer, "variant-utils", "illumina", vcf_dir,
                 sample, self.grc_file, self.ucsc_file)
 
         return out_file
@@ -145,6 +151,38 @@ class SnpEff(AbstractStage):
         return out_file
 
 
+class Vep(AbstractStage):
+
+    stage = "vep"
+
+    def __init__(self, config):
+        self.config = config
+        super(Vep, self).__init__(self.config)
+        self.vep_config = config["stage"].get("vep", {})
+        self.species = self.vep_config.get("species", "human")
+        self.options = self.vep_config.get("options", None)
+        self.vep = self.config["program"].get("vep",
+                                              "variant_effect_predictor.pl")
+
+    def __call__(self, in_file):
+        self._start_message(in_file)
+        out_file = self._run_vep(in_file)
+        self._end_message(in_file)
+        return out_file
+
+    def _run_vep(self, in_file):
+        out_file = append_stem(in_file, "vep")
+        if file_exists(out_file):
+            return out_file
+
+        with file_transaction(out_file) as tmp_out_file:
+            sh.perl(self.vep, "-i", in_file, "-o", tmp_out_file,
+                    species=self.species, _convert_underscore=False,
+                    **self.options)
+
+        return out_file
+
+
 class GeminiLoader(AbstractStage):
 
     stage = "geminiloader"
@@ -155,12 +193,20 @@ class GeminiLoader(AbstractStage):
         super(GeminiLoader, self).__init__(self.config)
         self.gemini = config["program"].get("gemini", "gemini")
         self.type = gemini_stage.get("type", "snpEff")
-        self.db = os.path.join(config["dir"].get("results", "results"),
-                               self.stage,
+        out_dir = os.path.join(config["dir"].get("results", "results"),
+                               self.stage)
+        safe_makedir(out_dir)
+        self.db = os.path.join(out_dir,
                                gemini_stage.get("db", "combined.db"))
+        self.log = config["dir"].get("log", "log")
 
     def _load_gemini(self, in_file):
-        sh.gemini.load(self.db, v=in_file, t=self.type)
+        log_id = os.path.join(self.log,
+                              "gemini" + "_" + uuid.uuid4() + ".log")
+        sh.gemini.load(self.db, v=in_file, t=self.type,
+                       _out=append_stem(log_id, "out"),
+                       _err=append_stem(log_id, "err"))
+
 
     def __call__(self, in_file):
         self._start_message(in_file)
@@ -169,7 +215,65 @@ class GeminiLoader(AbstractStage):
         return self.db
 
 
+class BreakVcfByChromosome(AbstractStage):
+
+    stage = "break_vcf_by_chromosome"
+
+    def __init__(self, config):
+        self.config = config
+        self.fasta_file = self.config["ref"]["fasta"]
+        self.fasta_index = self.fasta_file + ".fai"
+        self.tabix = config["program"].get("tabix", "tabix")
+        self.samtools = config["program"].get("samtools", "samtools")
+
+    def _break_vcf(self, in_file):
+        if not file_exists(self.fasta_index):
+            sh.samtools.faidx(self.fasta_file)
+
+        # if file is not compressed, compress it
+        (_, ext) = os.path.splitext(in_file)
+        if ext is not ".gz":
+            gzip_file = in_file + ".gz"
+            sh.bgzip("-c", in_file, _out=gzip_file)
+            in_file = gzip_file
+
+        # create tabix index if it does not exist already
+        if not file_exists(in_file + ".tbi"):
+            sh.tabix("-p", "vcf", in_file)
+
+        # find the chromosome names from the fasta index file
+        chroms = str(sh.cut("-f1", self.fasta_index)).split()
+        break_dir = os.path.join(os.path.dirname(in_file), "break")
+        safe_makedir(break_dir)
+
+        def chr_out(chrom):
+            out_file = os.path.join(break_dir, append_stem(in_file, chrom))
+            out_file = replace_suffix(out_file, "vcf")
+            return out_file
+
+        def tabix(chrom):
+            out_file = chr_out(chrom)
+            if file_exists(out_file):
+                return out_file
+            with file_transaction(out_file) as tmp_out_file:
+                sh.tabix("-h", in_file, chrom, _out=tmp_out_file)
+            return out_file
+
+        # use tabix to separate out the variants based on chromosome
+        out_files = map(tabix, chroms)
+
+        return out_files
+
+    def __call__(self, in_file):
+        self._start_message(in_file)
+        out_files = self._break_vcf(in_file)
+        self._end_message(in_file)
+        return out_files
+
+
 STAGE_LOOKUP = {"fastqc": FastQCStage,
                 "geminiloader": GeminiLoader,
                 "snpeff": SnpEff,
-                "illumina_fixer": IlluminaVCFFixer}
+                "illumina_fixer": IlluminaVCFFixer,
+                "vep": Vep,
+                "breakvcf": BreakVcfByChromosome}
