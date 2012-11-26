@@ -9,7 +9,7 @@ import sh
 logger = logging.getLogger(__name__)
 
 
-def intersect(bam_file, bed_file, exclude=False, out_file=None):
+def intersectbam2bed(bam_file, bed_file, exclude=False, out_file=None):
     """
     return the entries in bam_file that overlap (exclude=False) or
     do not overlap (exclude=True) with a feature bed_file.
@@ -20,7 +20,7 @@ def intersect(bam_file, bed_file, exclude=False, out_file=None):
     (bed_base, bed_ext) = os.path.splitext(bed_file)
 
     if not out_file:
-        out_prefix = bam_base + "_vs_" + bed_base
+        out_prefix = bam_base + "_vs_" + os.path.basename(bed_base)
         if exclude:
             out_file = out_prefix + ".nointersect" + bam_ext
         else:
@@ -32,9 +32,9 @@ def intersect(bam_file, bed_file, exclude=False, out_file=None):
     if exclude:
         exclude_arg = "-v"
     else:
-        exclude_arg = ""
+        exclude_arg = "-u"
 
-    sh.bedtools.intersect("-u", exclude_arg, "-abam", bam_file, b=bed_file,
+    sh.bedtools.intersect(exclude_arg, "-abam", bam_file, b=bed_file,
                           _out=out_file)
 
     return out_file
