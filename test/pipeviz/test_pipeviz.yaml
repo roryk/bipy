@@ -1,0 +1,10 @@
+
+run:
+  - fastqc
+  - cutadapt:
+    - fastqc
+    - tophat:
+      - coverage
+      - rseqc
+      - htseq-count:
+          - deseq
