@@ -104,6 +104,7 @@ class IlluminaVCFFixer(AbstractStage):
                              "a CSV file of the samples to look up."
                              % (sample_field))
 
+
         with open(sample_file, 'rb') as in_handle:
             reader = csv.reader(in_handle, delimiter=",")
             d = {}
@@ -124,7 +125,9 @@ class IlluminaVCFFixer(AbstractStage):
 
         sh.java(self.java_memory,
                 "-jar", self.fixer, "variant-utils", "illumina", vcf_dir,
-                sample, self.grc_file, self.ucsc_file)
+                sample, self.grc_file, self.ucsc_file,
+                _out=os.path.join(vcf_dir, sample + ".out"),
+                _err=os.path.join(vcf_dir, sample + ".err"))
 
         return out_file
 
