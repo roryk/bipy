@@ -43,6 +43,44 @@ ADAPTERS["iontorrent"] = [
      "5_prime_adapter_rc"],
     ["CCATCTCATCCCTGCGTGTCTCCGACTCAG", "-a", "3_prime_adapter_rc"]]
 
+TRUSEQ_BARCODES = {"ATCACG": 1, "AGTCAA": 13, "ACTGAT": 25, "CGGAAT": 37,
+                   "CGATGT": 2, "AGTTCC": 14, "ATGAGC": 26, "CTAGCT": 38,
+                   "TTAGGC": 3, "ATGTCA": 15, "ATTCCT": 27, "CTATAC": 39,
+                   "TGACCA": 4, "CCGTCC": 16, "CAAAAG": 28, "CTCAGA": 40,
+                   "ACAGTG": 5, "GTAGAG": 17, "CAACTA": 29, "GACGAC": 41,
+                   "GCCAAT": 6, "GTCCGC": 18, "CACCGG": 30, "TAATCG": 42,
+                   "CAGATC": 7, "GTGAAA": 19, "CACGAT": 31, "TACAGC": 43,
+                   "ACTTGA": 8, "GTGGCC": 20, "CACTCA": 32, "TATAAT": 44,
+                   "GATCAG": 9, "GTTTCG": 21, "CAGGCG": 33, "TCATTC": 45,
+                   "TAGCTT": 10, "CGTACG": 22, "CATGGC": 34, "TCCCGA": 46,
+                   "GGCTAC": 11, "GAGTGG": 23, "CATTTT": 35, "TCGAAG": 47,
+                   "CTTGTA": 12, "GGTAGC": 24, "CCAACA": 36, "TCGGCA": 48}
+
+VALID_TRUSEQ_RNASEQ = {k: v for (k, v) in TRUSEQ_BARCODES.items() if v < 13}
+
+
+def truseq_barcode_lookup(barcode, small=False):
+    """
+    looks up a truseq adapter sequence by inserting the barcode in the
+    correct sequence. throws an exception if the barcode does not match
+    known barcodes
+
+    """
+    prefix = "GATCGGAAGAGCACACGTCTGAACTCCAGTCAC"
+    suffix = "ATCTCGTATGCCGTCTTCTGCTTG"
+    if small:
+        raise NotImplementedError("Small RNA barcodes not implemented. Need "
+                                  "to check to make sure the prefix and "
+                                  "suffix sequences are the same as the "
+                                  "RNA-seq barcodes.")
+    if barcode not in VALID_TRUSEQ_RNASEQ:
+        raise ValueError("Barcode not found in TruSeq barcodes. Might need "
+                         "to implement v1 and v2 versions.")
+
+
+    return prefix + barcode + suffix
+
+
 def _get_adapter(adapter):
     return [adapter[1], adapter[0]]
 
