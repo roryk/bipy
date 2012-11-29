@@ -104,6 +104,7 @@ class IlluminaVCFFixer(AbstractStage):
                              "a CSV file of the samples to look up."
                              % (sample_field))
 
+
         with open(sample_file, 'rb') as in_handle:
             reader = csv.reader(in_handle, delimiter=",")
             d = {}
