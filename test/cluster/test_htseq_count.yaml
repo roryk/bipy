@@ -4,3 +4,4 @@ cluster:
   cores: 1
   work: log
 
+log_dir: /Users/rory/cache/bipy/log
