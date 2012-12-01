@@ -25,5 +25,5 @@ class TestCutadapt(unittest.TestCase):
         correct_files = self.config["input_paired_correct"]
         paired = self.config["input_paired"]
         cutadapt = Cutadapt(self.config)
-        out_files = map(cutadapt, paired)
+        out_files = cutadapt(paired)
         self.assertTrue(all(map(filecmp.cmp, correct_files, out_files)))
