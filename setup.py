@@ -10,6 +10,7 @@ setup(name="bipy",
       license="MIT",
       namespace_packages=["bipy"],
       packages=find_packages(),
+      package_data={'bipy': ['data/*']},
       install_requires=[
           "ipython >= 0.11",
           "bcbio",
