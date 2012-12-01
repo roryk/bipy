@@ -2,7 +2,7 @@
 from setuptools import setup, find_packages
 
 setup(name="bipy",
-      version="0.0.1",
+      version="0.1.0",
       author="Rory Kirchner",
       author_email="rory.kirchner@gmail.com",
       description="Simple analysis pipelines",
@@ -14,4 +14,7 @@ setup(name="bipy",
       install_requires=[
           "ipython >= 0.11",
           "bcbio",
-          "sh"])
+          "sh == 1.07",
+          "biopython == 1.60",
+          "numpy == 1.5.1",
+          "cutadapt == 1.2.1"])
