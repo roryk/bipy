@@ -22,6 +22,11 @@ def annotate_table_with_biomart(in_file, join_column,
     filter_type describes the type of the join_column (see the getBM
     documentation in R for details), organism is the english name of
     the organism
+
+    example:
+    annotate_table_with_biomart(in_file, "id", "ensembl_gene_id",
+                                "human")
+
     """
 
     if organism not in ORG_TO_ENSEMBL:
