@@ -358,3 +358,24 @@ def get_in(d, t, default=None):
         return default
     else:
         return result
+
+
+def is_sequence(arg):
+    """
+    check if 'arg' is a sequence
+
+    example: arg([]) -> True
+    example: arg("lol") -> False
+
+    """
+    return (not hasattr(arg, "strip") and
+            hasattr(arg, "__getitem__") or
+            hasattr(arg, "__iter__"))
+
+
+def is_pair(arg):
+    """
+    check if 'arg' is a two-item sequence
+
+    """
+    return is_sequence(arg) and len(arg) == 2
