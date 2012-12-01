@@ -1,9 +1,10 @@
 """
-wrapper around Trim galore! for trimming off common adapter
+wrappers around Trim galore! and cutadapt for trimming off common adapter
 sequences used in NGS
 
-http://www.bioinformatics.babraham.ac.uk/projects/trim_galore/
-
+Trim galore!: http://www.bioinformatics.babraham.ac.uk/projects/trim_galore/
+cutadapt: https://github.com/marcelm/cutadapt
+sickle: https://github.com/najoshi/sickle
 """
 
 from bcbio.distributed.transaction import file_transaction
@@ -88,14 +89,12 @@ class Cutadapt(AbstractStage):
         self.options = self.stage_config.get("options", "")
         self.user_adapters = self.stage_config.get("adapters", [])
 
-
     def _detect_fastq_format(self, in_file):
         formats = DetectFastqFormat.run(in_file)
         if "sanger" in formats:
             return "sanger"
         else:
             return "illumina"
-
 
     def in2trimmed(self, in_file):
         """
