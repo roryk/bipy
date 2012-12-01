@@ -93,9 +93,7 @@ class DetectFastqFormat(object):
                 if i % 4 is 3:
                     records_read += 1
                     for c in line.strip():
-                        print c, ord(c)
                         formats = kept
-                        print formats
                         if len(formats) == 1:
                             return formats
                         for form in formats:
