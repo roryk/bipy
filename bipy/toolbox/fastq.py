@@ -92,8 +92,10 @@ class DetectFastqFormat(object):
                     break
                 if i % 4 is 3:
                     records_read += 1
-                    for c in line:
+                    for c in line.strip():
+                        print c, ord(c)
                         formats = kept
+                        print formats
                         if len(formats) == 1:
                             return formats
                         for form in formats:
@@ -102,3 +104,6 @@ class DetectFastqFormat(object):
                                 kept.remove(form)
 
         return formats
+
+    def __call__(self, in_file, MAX_RECORDS=1000000):
+        return self.run(in_file, MAX_RECORDS)
