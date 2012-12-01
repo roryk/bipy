@@ -11,23 +11,22 @@ dir:
   meta: meta
   tmp: tmp
 
-program:
-  cutadapt: cutadapt
 
-input:
-  - "test/data/cutadapt.fa"
+input_single: "test/cutadapt/data/test_cutadapt_1.fastq"
+input_single_correct: "test/cutadapt/data/test_single_correct.fastq"
+
+input_paired:
+  - "test/cutadapt/data/test_cutadapt_1.fastq"
+  - "test/cutadapt/data/test_cutadapt_2.fastq"
+input_paired_correct:
+  - "test/cutadapt/data/test_paired_correct_1.fastq"
+  - "test/cutadapt/data/test_paired_correct_2.fastq"
 
 stage:
   cutadapt:
-    name: cutadapt
     program: cutadapt
-    platform: [iontorrent, polya]
-    adapters:
-      - [ACTGATG, -g, left]
-      - [GCCAAGTC, -a, right]
+    chemistry: [truseq, illumina, nextera]
+    trim_polya: True
     options:
-      - [--error-rate, 0.1]
-      - [--minimum-length, 10]
-
-run:
-  [ trim_adapter ]
+      error-rate: 0.1
+      quality-cutoff: 20
