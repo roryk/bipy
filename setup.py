@@ -14,7 +14,7 @@ setup(name="bipy",
       install_requires=[
           "ipython >= 0.11",
           "bcbio",
-          "sh == 1.07",
-          "biopython == 1.60",
-          "numpy == 1.5.1",
-          "cutadapt == 1.2.1"])
+          "sh",
+          "biopython",
+          "numpy",
+          "cutadapt"])
