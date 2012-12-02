@@ -1,0 +1,5 @@
+# first 13 nucleotides of adapters/contaminants to trim off
+"illumina": ["AACACTCTTTCCCT", "AGATCGGAAGAGCG"]
+"truseq": ["AGATCGGAAGAG"]
+"polya": ["AAAAAAAAAAAAA"]
+"nextera": ["AATGATACGGCGA", "CAAGCAGAAGACG"]

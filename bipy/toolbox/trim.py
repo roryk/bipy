@@ -1,0 +1,207 @@
+"""
+wrappers around Trim galore! and cutadapt for trimming off common adapter
+sequences used in NGS
+
+Trim galore!: http://www.bioinformatics.babraham.ac.uk/projects/trim_galore/
+cutadapt: https://github.com/marcelm/cutadapt
+sickle: https://github.com/najoshi/sickle
+"""
+
+from bcbio.distributed.transaction import file_transaction
+from bcbio.utils import file_exists, safe_makedir
+from bipy.pipeline.stages import AbstractStage
+from bipy.utils import flatten, append_stem, get_in, is_pair
+import sh
+import os
+from pkg_resources import resource_stream
+import yaml
+from Bio.Seq import Seq
+import tempfile
+from bipy.toolbox.fastq import DetectFastqFormat
+
+with resource_stream(__name__, 'data/adapters.yaml') as in_handle:
+    ADAPTERS = yaml.load(in_handle)
+
+
+class TrimGalore(AbstractStage):
+    """
+    runs trim_galore on the data to trim off adapters, polyA tails and
+    other contaminating sequences
+    http://www.bioinformatics.babraham.ac.uk/projects/trim_galore/
+
+    """
+
+    stage = "trim_galore"
+
+    def __init__(self, config):
+        self.config = config
+        self.stage_config = get_in(config, ("stage", self.stage), {})
+        self.chemistry = self.stage_config.get("chemistry", "truseq")
+        if not isinstance(self.chemistry, list):
+            self.chemistry = [self.chemistry]
+
+        self.options = self.stage_config.get("options", "")
+        self.trim_galore = sh.Command(self.stage_config.get("program",
+                                                            "trim_galore"))
+        self.out_dir_prefix = get_in(config, ("dir", "results"),
+                                     "results") + self.stage
+        self.trim_polya = self.stage_config.get("trim_polya", True)
+        safe_makedir(self.out_dir_prefix)
+
+    def get_adapters(self, chemistry):
+        return list(flatten([["-a", x] for x in ADAPTERS.get(chemistry, [])]))
+
+    def _in2out(self, in_file):
+        base, _ = os.path.splitext(in_file)
+        return base + "_trimmed.fq"
+
+    def __call__(self, in_file):
+        raise NotImplementedError("Waiting to hear back from maintainer to "
+                                  "handle multiple adapters before finishing.")
+        adapters = list(flatten(map(self.get_adapters, self.chemistry)))
+        # if it is a list assume these are pairs
+        if isinstance(in_file, list):
+            out_files = map(self._in2out, in_file)
+            if all(map(file_exists, out_files)):
+                return out_files
+            self.trim_galore(in_file, self.options, adapters, paired=True)
+            return out_files
+        # if it is only one file just run it
+        else:
+            out_file = self._in2out(in_file)
+            if file_exists(out_file):
+                return out_file
+            self.trim_galore(in_file, self.options, adapters)
+            return out_file
+
+
+class Cutadapt(AbstractStage):
+
+    stage = "cutadapt"
+
+    def __init__(self, config):
+        self.config = config
+        self.stage_config = get_in(config, ("stage", self.stage), {})
+        self.chemistry = self.stage_config.get("chemistry", "truseq")
+        if not isinstance(self.chemistry, list):
+            self.chemistry = [self.chemistry]
+
+        self.options = self.stage_config.get("options", "")
+        self.user_adapters = self.stage_config.get("adapters", [])
+
+    def _detect_fastq_format(self, in_file):
+        formats = DetectFastqFormat.run(in_file)
+        if "sanger" in formats:
+            return "sanger"
+        else:
+            return "illumina"
+
+    def in2trimmed(self, in_file):
+        """
+        return expected out_file name if cutadapt is run on
+        in_file
+
+        """
+        basename = os.path.basename(in_file)
+        base, _ = os.path.splitext(basename)
+        out_dir = os.path.join(get_in(self.config, ("dir", "results"),
+                                      "results"), self.stage)
+        safe_makedir(out_dir)
+        return os.path.join(out_dir, base + "_trimmed.fq")
+
+    def _get_adapters(self, chemistry):
+        adapters = [ADAPTERS.get(x, []) for x in chemistry]
+        adapters += self.user_adapters
+        adapters = list(flatten(adapters))
+        adapters += self._rc_adapters(adapters)
+        adapter_args = [["-a", adapter] for adapter in adapters]
+        return list(flatten(adapter_args))
+
+    def _rc_adapters(self, adapters):
+        rc = [str(Seq(x).reverse_complement()) for x in adapters]
+        return rc
+
+    def _cut_file(self, in_file):
+        """
+        run cutadapt on a single file
+
+        """
+        adapters = self._get_adapters(self.chemistry)
+        out_file = self.in2trimmed(in_file)
+        if file_exists(out_file):
+            return out_file
+        cutadapt = sh.Command(self.stage_config.get("program",
+                                                    "cutadapt"))
+
+        # if not sanger assume old style illumina
+        if self._detect_fastq_format(in_file) is "sanger":
+            quality_base = 33
+        else:
+            quality_base = 64
+
+        # if we want to trim the polya tails we have to first remove
+        # the adapters and then trim the tail
+        if self.stage_config.get("trim_polya", True):
+            temp_cut = tempfile.NamedTemporaryFile(suffix=".fq")
+            # trim off adapters
+            cutadapt(in_file, self.options, adapters,
+            #quality_base=quality_base,
+                     _out=temp_cut.name)
+            with file_transaction(out_file) as temp_out:
+                polya = ADAPTERS.get("polya")
+                # trim off polya
+                cutadapt(temp_cut.name, self.options, "-a",
+                         polya, "-a", self._rc_adapters(polya),
+                #              quality_base=quality_base,
+                         out=temp_out)
+            return out_file
+        else:
+            with file_transaction(out_file) as temp_out:
+                cutadapt(in_file, self.options, adapters,
+                         _out=temp_out)
+            return out_file
+
+    def _run_se(self, in_file):
+        # cut polyA tails and adapters off
+        trimmed_file = self._cut_file(in_file)
+        sickle = sh.Command(get_in(self.config,
+                                   ("stage", "sickle", "program"),
+                                   "sickle"))
+        # remove reads that don't pass the length cut
+        out_file = append_stem(trimmed_file, "sickle")
+        quality_format = self._detect_fastq_format(in_file)
+        if file_exists(out_file):
+            return out_file
+        with file_transaction(out_file) as temp_out:
+            sickle.se(f=trimmed_file, l=20, o=temp_out, t=quality_format)
+
+        return out_file
+
+    def _run_pe(self, in_files):
+        trimmed_files = map(self._cut_file, in_files)
+        sickle = sh.Command(get_in(self.config,
+                                   ("stage", "sickle", "program"),
+                                   "sickle"))
+        out_files = [append_stem(x, "sickle") for x in trimmed_files]
+        quality_format = self._detect_fastq_format(in_files[0])
+        single_file = append_stem(trimmed_files[0], "singles")
+        if all(map(file_exists, out_files)):
+            return out_files
+        with file_transaction(out_files) as tmp_out_files:
+            sickle.pe(f=trimmed_files[0], r=trimmed_files[1], l=20,
+                      o=tmp_out_files[0], p=tmp_out_files[1],
+                      t=quality_format, s=single_file)
+
+        return out_files
+
+    def __call__(self, in_file):
+        if is_pair(in_file):
+            out_files = self._run_pe(in_file)
+            return out_files
+        elif isinstance(in_file, str):
+            out_file = self._run_se(in_file)
+            return out_file
+        else:
+            raise ValueError("Cutadapt can only run on either a single "
+                             "file as a string or a pair of files to "
+                             "handle paired end data.")

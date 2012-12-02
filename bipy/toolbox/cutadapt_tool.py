@@ -2,12 +2,11 @@
 used adapters for trimming
 """
 from bipy.utils import flatten_options, append_stem, flatten, which
-from operator import itemgetter
 import subprocess
 import os
 from bcbio.utils import safe_makedir, file_exists
-import difflib
 import sh
+import yaml
 
 
 # adapter sequences for various commonly used systems
@@ -57,7 +56,7 @@ TRUSEQ_BARCODES = {"ATCACG": 1, "AGTCAA": 13, "ACTGAT": 25, "CGGAAT": 37,
                    "CTTGTA": 12, "GGTAGC": 24, "CCAACA": 36, "TCGGCA": 48}
 
 VALID_TRUSEQ_RNASEQ = {k: v for (k, v) in TRUSEQ_BARCODES.items() if v < 13}
-
+TRUSEQ_PREFIX = "GATCGGAAGAGCACACGTCTGAACTCCAGTCAC"
 
 def truseq_barcode_lookup(barcode, small=False):
     """
@@ -66,7 +65,7 @@ def truseq_barcode_lookup(barcode, small=False):
     known barcodes
 
     """
-    prefix = "GATCGGAAGAGCACACGTCTGAACTCCAGTCAC"
+    prefix = "AGATCGGAAGAGCACACGTCTGAACTCCAGTCAC"
     suffix = "ATCTCGTATGCCGTCTTCTGCTTG"
     if small:
         raise NotImplementedError("Small RNA barcodes not implemented. Need "
@@ -76,7 +75,6 @@ def truseq_barcode_lookup(barcode, small=False):
     if barcode not in VALID_TRUSEQ_RNASEQ:
         raise ValueError("Barcode not found in TruSeq barcodes. Might need "
                          "to implement v1 and v2 versions.")
-
 
     return prefix + barcode + suffix
 
@@ -131,19 +129,6 @@ def run(in_file, stage_config, config):
     arguments.extend(["--output", out_file, in_file])
     subprocess.check_call(arguments)
     return out_file
-
-
-def fix_paired_files(first, second, out_file=None):
-    if out_file is None:
-        common = _common_prefix(first, second) + "fixed"
-    mergeFastq = sh.Command(which("mergeShuffledFastqSeqs.pl"))
-    #cmd = ["mergeShuffledFastqSeqs.pl", "-f1", first, "-f2", second,
-    #       "-o", common, "-t", "-r", "^@(\S+)/[1|2]$"]
-           #subprocess.check_call(cmd)
-    mergeFastq(f1=first, f2=second, o=common, t=True, r=r'^@(\S+)/[1|2]$')
-    # XXX these might not be right.
-    return (common + "_1.fastq", common + "_2.fastq")
-
 
 def _common_prefix(first, second):
     for i, (x, y) in enumerate(zip(first, second)):

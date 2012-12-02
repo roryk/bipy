@@ -41,7 +41,8 @@ def load_config(config_file):
 
 @atexit.register
 def stop_cluster():
-    cluster.stop()
+    if cluster:
+        cluster.stop()
 
 
 def start_cluster(cluster_config):

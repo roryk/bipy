@@ -343,3 +343,39 @@ def nested_lookup(d, t):
     each item in the tuple a deeper layer
     """
     return reduce(lambda d, t: d.get(t, {}), t, d)
+
+
+def get_in(d, t, default=None):
+    """
+    look up if you can get a tuple of values from a nested dictionary,
+    each item in the tuple a deeper layer
+
+    example: get_in({1: {2: 3}}, (1, 2)) -> 3
+    example: get_in({1: {2: 3}}, (2, 3)) -> {}
+    """
+    result = reduce(lambda d, t: d.get(t, {}), t, d)
+    if not result:
+        return default
+    else:
+        return result
+
+
+def is_sequence(arg):
+    """
+    check if 'arg' is a sequence
+
+    example: arg([]) -> True
+    example: arg("lol") -> False
+
+    """
+    return (not hasattr(arg, "strip") and
+            hasattr(arg, "__getitem__") or
+            hasattr(arg, "__iter__"))
+
+
+def is_pair(arg):
+    """
+    check if 'arg' is a two-item sequence
+
+    """
+    return is_sequence(arg) and len(arg) == 2
