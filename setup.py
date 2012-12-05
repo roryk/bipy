@@ -16,5 +16,4 @@ setup(name="bipy",
           "bcbio",
           "sh == 1.07",
           "biopython == 1.60",
-          "numpy == 1.5.1",
           "cutadapt == 1.2.1"])
