@@ -177,7 +177,7 @@ class GeminiLoader(AbstractStage):
 
     def _load_gemini(self, in_file):
         log_id = os.path.join(self.log,
-                              "gemini" + "_" + uuid.uuid4() + ".log")
+                              "gemini" + "_" + str(uuid.uuid4()) + ".log")
         sh.gemini.load(self.db, v=in_file, t=self.type,
                        _out=append_stem(log_id, "out"),
                        _err=append_stem(log_id, "err"))
