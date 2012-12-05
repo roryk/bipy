@@ -9,6 +9,8 @@ from mako.template import Template
 from bipy.toolbox.reporting import LatexReport, safe_latex
 import sh
 import zipfile
+from bipy.pipeline.stages import AbstractStage
+
 
 logger = logging.getLogger("bipy")
 
@@ -269,3 +271,30 @@ class RNASeqFastQCReport(FastQCReport):
                 "per_bases_n_content.png": "",
                 "per_sequence_quality.png": "",
                 "sequence_length_distribution.png": ""}
+
+
+class FastQCStage(AbstractStage):
+
+    stage = "fastqc"
+
+    def __init__(self, config):
+        self.config = config
+        super(FastQCStage, self).__init__(self.config)
+        self.stage_config = config["stage"][self.stage]
+
+    def _start_message(self, in_file):
+        logger.info("Starting %s on %s" % (self.stage, in_file))
+
+    def _end_message(self, in_file):
+        logger.info("%s complete on %s." % (self.stage, in_file))
+
+    def _check_run(self, in_file):
+        if not file_exists(in_file):
+            raise IOError('%s not found.' % (in_file))
+
+    def __call__(self, in_file):
+        self._start_message(in_file)
+        self._check_run(in_file)
+        out_file = run(in_file, self.stage_config, self.config)
+        self._end_message(in_file)
+        return out_file
