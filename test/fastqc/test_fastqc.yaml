@@ -4,22 +4,19 @@ cluster:
   cores: 4
 
 dir:
-  results: results
+  results: test/fastqc/results/
 
-input:
-  - test/data/test_fastq_1.fastq
-  - test/data/test_fastq_2.fastq
-  
+input: test/fastqc/data/test_fastqc.fastq
+
 log_dir: log
 
 program:
   fastqc: fastqc
 
 stage:
-  quality_control:
+  fastqc:
     program: fastqc
-    options:
-      - [--noextract]
+    options: []
 
 run:
-  [quality_control]
+  [fastqc]

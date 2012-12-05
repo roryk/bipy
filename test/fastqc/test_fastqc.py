@@ -1,25 +1,31 @@
-from bipy.log import logger, setup_logging
-from bipy.cluster import start_cluster, stop_cluster
 import yaml
-import sys
 from bipy.toolbox import fastqc
+import unittest
+import os
+import filecmp
+import shutil
+
+cur_dir = os.path.dirname(os.path.realpath(__file__))
+CONFIG_FILE = os.path.join(cur_dir, "test_fastqc.yaml")
 
 
-def main(config_file):
-    with open(config_file) as in_handle:
-        config = yaml.load(in_handle)
-    setup_logging(config)
-    start_cluster(config)
-    from bipy.cluster import view
+class TestFastqc(unittest.TestCase):
 
-    input_files = config["input"]
-    for stage in config["run"]:
-        if config["stage"][stage]["program"] == "fastqc":
-            fastqc_config = config["stage"][stage]
-            view.map(fastqc.run, input_files,
-                     [fastqc_config] * len(input_files),
-                     [config] * len(input_files))
-    stop_cluster()
+    def setUp(self):
+        with open(CONFIG_FILE) as in_handle:
+            self.config = yaml.load(in_handle)
+        self.stage = fastqc.FastQCStage(self.config)
+        self.input = self.config["input"]
+
+    def test_fastqc(self):
+        correct_file = os.path.join(cur_dir, "data", "correct_fastqc.txt")
+        run_result = self.stage(self.input)
+        out_table = os.path.join(os.path.dirname(run_result),
+                                 "test_fastqc_fastqc",
+                                 "fastqc_data.txt")
+        self.assertTrue(filecmp.cmp(correct_file, out_table))
+        shutil.rmtree(os.path.join(cur_dir, "results"))
 
 if __name__ == "__main__":
-    main(*sys.argv[1:])
+    suite = unittest.TestLoader().loadTestsFromTestCase(TestFastqc)
+    unittest.TextTestRunner(verbosity=2).run(suite)
