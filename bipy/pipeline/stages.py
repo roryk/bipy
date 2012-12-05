@@ -1,4 +1,3 @@
-from bipy.toolbox import fastqc
 from bipy.log import logger
 from bcbio.utils import file_exists, safe_makedir
 from bipy.utils import append_stem, replace_suffix
@@ -47,33 +46,6 @@ class AbstractStage(object):
     def _validate_config(self):
         if "stage" not in self.config:
             raise ValueError('Could not find "stage" in the config file.')
-
-
-class FastQCStage(AbstractStage):
-
-    stage = "fastqc"
-
-    def __init__(self, config):
-        self.config = config
-        super(FastQCStage, self).__init__(self.config)
-        self.stage_config = config["stage"][self.stage]
-
-    def _start_message(self, in_file):
-        logger.info("Starting %s on %s" % (self.stage, in_file))
-
-    def _end_message(self, in_file):
-        logger.info("%s complete on %s." % (self.stage, in_file))
-
-    def _check_run(self, in_file):
-        if not file_exists(in_file):
-            raise IOError('%s not found.' % (in_file))
-
-    def __call__(self, in_file):
-        self._start_message(in_file)
-        self._check_run(in_file)
-        out_file = fastqc.run(in_file, self.stage_config, self.config)
-        self._end_message(in_file)
-        return out_file
 
 
 class IlluminaVCFFixer(AbstractStage):
@@ -274,8 +246,7 @@ class BreakVcfByChromosome(AbstractStage):
         return out_files
 
 
-STAGE_LOOKUP = {"fastqc": FastQCStage,
-                "geminiloader": GeminiLoader,
+STAGE_LOOKUP = {"geminiloader": GeminiLoader,
                 "snpeff": SnpEff,
                 "illumina_fixer": IlluminaVCFFixer,
                 "vep": Vep,
