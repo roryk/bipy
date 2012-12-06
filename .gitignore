@@ -7,7 +7,7 @@ ref/
 dist/
 .fuse*
 *.py[cod]
-
+*.DS_Store
 # C extensions
 *.so
 
