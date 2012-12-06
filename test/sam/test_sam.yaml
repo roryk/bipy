@@ -1,0 +1,27 @@
+cluster:
+  name: odyssey
+  profile: lsf
+  cores: 4
+
+dir:
+  results: test/sam/results/
+
+input_bamdiff:
+  - test/sam/data/test_bamdiff1.bam
+  - test/sam/data/test_bamdiff2.bam
+
+log_dir: log
+
+program:
+  fastqc: fastqc
+
+stage:
+  fastqc:
+    program: fastqc
+    options: []
+
+  disambiguate:
+    cutoff: 20
+
+run:
+  [disambiguate]
