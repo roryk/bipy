@@ -187,12 +187,11 @@ class Disambiguate(AbstractStage):
             assigned1.write(read1)
             read1 = None
         else:
-            if (read0.mapq - read1.mapq) > 20:
+            score = self._score_read_pair(read0, read1)
+            if score == 1:
                 assigned0.write(read0)
-            elif (read0.mapq - read1.mapq) < -20:
+            elif score == -1:
                 assigned1.write(read1)
-                read0 = None
-                read1 = None
             else:
                 ambiguous0.write(read0)
                 ambiguous1.write(read1)
@@ -201,25 +200,10 @@ class Disambiguate(AbstractStage):
 
         self._process_reads(handles_0, handles_1, read0, read1)
 
-
-def _assign_by_quality(pair, cutoff=20):
-    in_handle1 = pysam.Samfile(pair[0], "rb")
-    in_handle2 = pysam.Samfile(pair[1], "rb")
-    out_files = [x.replace("contested", "assigned") for x in pair]
-    out_handle1 = pysam.Samfile(out_files[0], "wb", template=in_handle1)
-    out_handle2 = pysam.Samfile(out_files[1], "wb", template=in_handle2)
-    ambig_files = [x.replace("contested", "ambiguous") for x in pair]
-    ambig_handle1 = pysam.Samfile(ambig_files[0], "wb", template=in_handle1)
-    ambig_handle2 = pysam.Samfile(ambig_files[1], "wb", template=in_handle2)
-
-    for read1, read2 in izip(in_handle1.fetch(), in_handle2.fetch()):
-        if (read1.mapq - read2.mapq) > cutoff:
-            out_handle1.write(read1)
-        elif (read2.mapq - read1.mapq) > cutoff:
-            out_handle2.write(read2)
+    def _score_read_pair(self, read0, read1):
+        if (read0.mapq - read1.mapq) > self.cutoff:
+            return 1
+        elif (read1.mapq - read0.mapq) > self.cutoff:
+            return -1
         else:
-            # output the reads to the ambiguous files
-            ambig_handle1.write(read1)
-            ambig_handle2.write(read2)
-
-    return out_files
+            return 0
