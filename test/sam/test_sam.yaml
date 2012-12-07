@@ -7,8 +7,8 @@ dir:
   results: test/sam/results/
 
 input_bamdiff:
-  - test/sam/data/test_bamdiff1.bam
-  - test/sam/data/test_bamdiff2.bam
+  - test/sam/data/test_bamdiff1.sorted.bam
+  - test/sam/data/test_bamdiff2.sorted.bam
 
 log_dir: log
 

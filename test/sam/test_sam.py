@@ -23,7 +23,7 @@ class TestSam(unittest.TestCase):
         correct_files = self._correct_files(output)
         correct_md5 = map(self._get_md5, correct_files)
         self.assertTrue(out_md5 == correct_md5)
-        map(os.remove, output)
+        #map(os.remove, output)
 
     def _get_md5(self, out_file):
         with open(out_file, "rb") as out_handle:
