@@ -91,10 +91,13 @@ class Cutadapt(AbstractStage):
 
     def _detect_fastq_format(self, in_file):
         formats = DetectFastqFormat.run(in_file)
-        if "sanger" in formats:
-            return "sanger"
+        sanger = ["sanger", "illumina_1.8+"]
+
+        # if it is a sanger variant, 33 if not return the base 64
+        if any([x in formats for x in sanger]):
+            return 33
         else:
-            return "illumina"
+            return 64
 
     def in2trimmed(self, in_file):
         """
@@ -134,10 +137,7 @@ class Cutadapt(AbstractStage):
                                                     "cutadapt"))
 
         # if not sanger assume old style illumina
-        if self._detect_fastq_format(in_file) is "sanger":
-            quality_base = 33
-        else:
-            quality_base = 64
+        quality_base = self._detect_fastq_format(in_file)
 
         # if we want to trim the polya tails we have to first remove
         # the adapters and then trim the tail
@@ -145,14 +145,14 @@ class Cutadapt(AbstractStage):
             temp_cut = tempfile.NamedTemporaryFile(suffix=".fq")
             # trim off adapters
             cutadapt(in_file, self.options, adapters,
-            #quality_base=quality_base,
+                     quality_base=quality_base,
                      _out=temp_cut.name)
             with file_transaction(out_file) as temp_out:
                 polya = ADAPTERS.get("polya")
                 # trim off polya
                 cutadapt(temp_cut.name, self.options, "-a",
                          polya, "-a", self._rc_adapters(polya),
-                #              quality_base=quality_base,
+                         quality_base=quality_base,
                          _out=temp_out)
             return out_file
         else:
