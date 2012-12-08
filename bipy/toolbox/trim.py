@@ -88,6 +88,8 @@ class Cutadapt(AbstractStage):
 
         self.options = self.stage_config.get("options", "")
         self.user_adapters = self.stage_config.get("adapters", [])
+        self.out_dir = os.path.join(get_in(self.config, ("dir", "results"),
+                                           "results"), self.stage)
 
     def _detect_fastq_format(self, in_file):
         formats = DetectFastqFormat.run(in_file)
@@ -107,10 +109,9 @@ class Cutadapt(AbstractStage):
         """
         basename = os.path.basename(in_file)
         base, _ = os.path.splitext(basename)
-        out_dir = os.path.join(get_in(self.config, ("dir", "results"),
-                                      "results"), self.stage)
-        safe_makedir(out_dir)
-        return os.path.join(out_dir, base + "_trimmed.fq")
+        safe_makedir(self.out_dir)
+        return os.path.join(self.out_dir, base + "_trimmed.fq")
+
 
     def _get_adapters(self, chemistry):
         adapters = [ADAPTERS.get(x, []) for x in chemistry]
@@ -142,7 +143,8 @@ class Cutadapt(AbstractStage):
         # if we want to trim the polya tails we have to first remove
         # the adapters and then trim the tail
         if self.stage_config.get("trim_polya", True):
-            temp_cut = tempfile.NamedTemporaryFile(suffix=".fq")
+            temp_cut = tempfile.NamedTemporaryFile(suffix=".fq",
+                                                   dir=self.out_dir)
             # trim off adapters
             cutadapt(in_file, self.options, adapters,
                      quality_base=quality_base,
