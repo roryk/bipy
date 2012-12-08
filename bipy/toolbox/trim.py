@@ -153,7 +153,7 @@ class Cutadapt(AbstractStage):
                 cutadapt(temp_cut.name, self.options, "-a",
                          polya, "-a", self._rc_adapters(polya),
                 #              quality_base=quality_base,
-                         out=temp_out)
+                         _out=temp_out)
             return out_file
         else:
             with file_transaction(out_file) as temp_out:
