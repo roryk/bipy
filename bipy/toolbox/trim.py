@@ -97,9 +97,9 @@ class Cutadapt(AbstractStage):
 
         # if it is a sanger variant, 33 if not return the base 64
         if any([x in formats for x in sanger]):
-            return 33
+            return "sanger"
         else:
-            return 64
+            return "illumina"
 
     def in2trimmed(self, in_file):
         """
@@ -138,7 +138,12 @@ class Cutadapt(AbstractStage):
                                                     "cutadapt"))
 
         # if not sanger assume old style illumina
-        quality_base = self._detect_fastq_format(in_file)
+        quality_format = self._detect_fastq_format(in_file)
+        if quality_format == "sanger":
+            quality_base = 33
+        else:
+            quality_base = 64
+
 
         # if we want to trim the polya tails we have to first remove
         # the adapters and then trim the tail
