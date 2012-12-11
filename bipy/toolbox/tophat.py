@@ -1,7 +1,12 @@
 from bcbio.ngsalign import tophat
 import os
-from bipy.utils import remove_suffix
+from bcbio.utils import file_exists
+from bipy.utils import remove_suffix, is_pair, get_in
 from bipy.toolbox import fastqc
+from bipy.pipeline.stages import AbstractStage
+from bcbio.distributed.transaction import file_transaction
+import sh
+from bipy.log import logger
 
 FASTQ_FORMAT_TO_BCBIO = {"sanger": None,
                          "illumina_1.3+": "illumina",
@@ -54,3 +59,61 @@ def _bcbio_tophat_wrapper(fastq_file, pair_file, ref_file,
     os.symlink("accepted_hits.sam", out_file_fixed)
 
     return out_file_fixed
+
+
+class Bowtie(AbstractStage):
+
+    stage = "bowtie"
+
+    def __init__(self, config):
+        self.config = config
+        self.stage_config = config["stage"][self.stage]
+        defaults = {"q": True, "n": 2, "k": 1,
+                    "X": 2000, "best": True,
+                    "strata": True, "sam": True,
+                    "phred-33-quals": True}
+        self.options = dict(defaults.items() +
+                            self.stage_config.get("options", {}).items())
+        self.bowtie = sh.Command(self.stage_config.get("program", "bowtie"))
+        self.out_prefix = os.path.join(get_in(self.config,
+                                              ("dir", "results"), "results"),
+                                              self.stage)
+        self.ref_file = self.stage_config["ref_file"]
+
+    def _bowtie_se(self, in_file, out_file):
+        self.bowtie(self.options, self.ref_file, in_file, out_file)
+
+    def _bowtie_pe(self, in_file, out_file):
+        self.bowtie(self.options, self.ref_file,
+                    "-1", in_file[0], "-2", in_file[1], out_file)
+
+    def _get_out_file(self, in_file):
+        base, _ = os.path.splitext(os.path.basename(in_file))
+        out_prefix = os.path.join(get_in(self.config,
+                                         ("dir", "results"), "results"),
+                                         self.stage)
+        out_dir = os.path.join(out_prefix, base)
+        out_file = os.path.join(out_dir, base + ".sam")
+        return out_file
+
+    def out_file(self, in_file):
+        if is_pair(in_file):
+            return self._get_out_file(in_file)
+        else:
+            return self._get_out_file(in_file)
+
+    def call(self, in_file):
+        logger.info("Running %s on %s." % (self.stage, in_file))
+        out_file = self.out_file(in_file)
+
+        if file_exists(out_file):
+            return out_file
+
+        with file_transaction(out_file) as tmp_out_file:
+            if is_pair(in_file):
+                self._bowtie_se(in_file, tmp_out_file)
+            else:
+                self._bowtie_pe(in_file, tmp_out_file)
+        logger.info("Completed running %s on %s." % (self.stage, in_file))
+
+        return out_file
