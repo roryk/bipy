@@ -70,15 +70,15 @@ class Bowtie(AbstractStage):
         self.stage_config = config["stage"][self.stage]
         defaults = {"q": True, "n": 2, "k": 1,
                     "X": 2000, "best": True,
-                    "strata": True, "sam": True,
-                    "phred-33-quals": True}
+                    "sam": True,
+                    "phred33-quals": True}
         self.options = dict(defaults.items() +
                             self.stage_config.get("options", {}).items())
         self.bowtie = sh.Command(self.stage_config.get("program", "bowtie"))
         self.out_prefix = os.path.join(get_in(self.config,
                                               ("dir", "results"), "results"),
                                               self.stage)
-        self.ref_file = self.stage_config["ref_file"]
+        self.ref_file = self.config["ref_file"]
 
     def _bowtie_se(self, in_file, out_file):
         self.bowtie(self.options, self.ref_file, in_file, out_file)
@@ -98,11 +98,11 @@ class Bowtie(AbstractStage):
 
     def out_file(self, in_file):
         if is_pair(in_file):
-            return self._get_out_file(in_file)
+            return self._get_out_file(in_file[0])
         else:
             return self._get_out_file(in_file)
 
-    def call(self, in_file):
+    def __call__(self, in_file):
         logger.info("Running %s on %s." % (self.stage, in_file))
         out_file = self.out_file(in_file)
 
@@ -111,9 +111,9 @@ class Bowtie(AbstractStage):
 
         with file_transaction(out_file) as tmp_out_file:
             if is_pair(in_file):
-                self._bowtie_se(in_file, tmp_out_file)
-            else:
                 self._bowtie_pe(in_file, tmp_out_file)
+            else:
+                self._bowtie_se(in_file, tmp_out_file)
         logger.info("Completed running %s on %s." % (self.stage, in_file))
 
         return out_file

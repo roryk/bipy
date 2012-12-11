@@ -1,0 +1,37 @@
+cluster:
+  name: odyssey
+  profile: lsf
+  cores: 1
+
+log_dir: log
+
+dir:
+  results: results
+  data: data
+  meta: meta
+  tmp: tmp
+
+ref_file: "test/data/bowtie/e_coli"
+
+input_single: "test/bowtie/data/s_1_1_10k.fq"
+input_single_correct: "test/bowtie/data/single_correct.sam"
+
+input_paired:
+  - "test/bowtie/data/s_1_1_10k.fq"
+  - "test/bowtie/data/s_1_2_10k.fq"
+input_paired_correct: "test/bowtie/data/paired_correct.sam"
+
+stage:
+  cutadapt:
+    program: cutadapt
+    chemistry: [truseq, illumina, nextera]
+    trim_polya: True
+    options:
+      error-rate: 0.1
+      quality-cutoff: 20
+
+
+  bowtie:
+    program: bowtie
+    options:
+      n: 3
