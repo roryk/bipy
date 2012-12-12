@@ -171,6 +171,7 @@ class Cutadapt(AbstractStage):
     def _get_sickle_file(self, in_file):
         base, ext = os.path.splitext(in_file)
         out_file = base + ".sickle" + ext
+	return out_file
 
     def _run_se(self, in_file):
         # cut polyA tails and adapters off
