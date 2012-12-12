@@ -168,6 +168,10 @@ class Cutadapt(AbstractStage):
                          _out=temp_out)
             return out_file
 
+    def _get_sickle_file(self, in_file):
+        base, ext = os.path.splitext(in_file)
+        out_file = base + ".sickle" + ext
+
     def _run_se(self, in_file):
         # cut polyA tails and adapters off
         trimmed_file = self._cut_file(in_file)
@@ -175,7 +179,8 @@ class Cutadapt(AbstractStage):
                                    ("stage", "sickle", "program"),
                                    "sickle"))
         # remove reads that don't pass the length cut
-        out_file = append_stem(trimmed_file, "sickle")
+        out_file = self._get_sickle_file(trimmed_file)
+        #out_file = append_stem(trimmed_file, "sickle")
         quality_format = self._detect_fastq_format(in_file)
         if file_exists(out_file):
             return out_file
@@ -189,7 +194,7 @@ class Cutadapt(AbstractStage):
         sickle = sh.Command(get_in(self.config,
                                    ("stage", "sickle", "program"),
                                    "sickle"))
-        out_files = [append_stem(x, "sickle") for x in trimmed_files]
+        out_files = map(self._get_sickle_file, trimmed_files)
         quality_format = self._detect_fastq_format(in_files[0])
         single_file = append_stem(trimmed_files[0], "singles")
         if all(map(file_exists, out_files)):
