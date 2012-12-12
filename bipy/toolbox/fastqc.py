@@ -87,7 +87,7 @@ def run(input_file, fastqc_config, config):
     outfile = _make_outfile(input_file, config)
     # if it is already done skip it
     if os.path.exists(outfile):
-        return outfile
+       return outfile
 
     cmd = _build_command(input_file, fastqc_config, config)
     subprocess.check_call(cmd)
@@ -141,7 +141,7 @@ class FastQCParser(object):
             over_rep[-1][0] = self._splitseq(over_rep[-1][0])
         return stats, over_rep[:self._max_overrep]
 
-    def _splitseq(self, seq):
+
         pieces = []
         cur_piece = []
         for s in seq:
