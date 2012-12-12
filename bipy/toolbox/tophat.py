@@ -61,6 +61,26 @@ def _bcbio_tophat_wrapper(fastq_file, pair_file, ref_file,
     return out_file_fixed
 
 
+class Tophat(AbstractStage):
+
+    stage = "tophat"
+
+    def __init__(self, config):
+        self.config = config
+        self.ref = config.get("ref", None)
+
+    def __call__(self, in_file):
+        self._start_message(in_file)
+        if is_pair(in_file):
+            out_file = run_with_config(in_file[0], in_file[1],
+                                       self.ref, self.stage, self.config)
+        else:
+            out_file = run_with_config(in_file[0], None, self.ref,
+                                       self.stage, self.config)
+        self._end_message(in_file, out_file)
+        return out_file
+
+
 class Bowtie(AbstractStage):
 
     stage = "bowtie"
@@ -103,10 +123,11 @@ class Bowtie(AbstractStage):
             return self._get_out_file(in_file)
 
     def __call__(self, in_file):
-        logger.info("Running %s on %s." % (self.stage, in_file))
+        self._start_message(in_file)
         out_file = self.out_file(in_file)
 
         if file_exists(out_file):
+            self._memoized_message(in_file, out_file)
             return out_file
 
         with file_transaction(out_file) as tmp_out_file:
@@ -114,6 +135,6 @@ class Bowtie(AbstractStage):
                 self._bowtie_pe(in_file, tmp_out_file)
             else:
                 self._bowtie_se(in_file, tmp_out_file)
-        logger.info("Completed running %s on %s." % (self.stage, in_file))
+        self._end_message(in_file, out_file)
 
         return out_file

@@ -1,6 +1,11 @@
 """
 example script for running a RNA-seq analysis
 
+python rnaseq_pipeline.py rnaseq_pipeline.yaml
+
+you will have to write a couple of functions to group the input
+data in useful ways
+
 """
 from bipy.cluster import start_cluster, stop_cluster
 import sys
@@ -8,11 +13,13 @@ import yaml
 from bipy.log import setup_logging, logger
 from bcbio.utils import safe_makedir, file_exists
 import os
-from bipy.utils import (append_stem, combine_pairs, flatten, dict_to_vectors,
+from bipy.utils import (combine_pairs, flatten, dict_to_vectors,
                         prepare_ref_file, replace_suffix)
-from bipy.toolbox import (fastqc, sickle, cutadapt_tool, tophat,
-                           htseq_count, deseq, fastq, annotate, rseqc, sam)
+from bipy.toolbox import (htseq_count, deseq, annotate, rseqc, sam)
 from bcbio.broad import BroadRunner, picardrun
+from bipy.toolbox.trim import Cutadapt
+from bipy.toolbox.fastqc import FastQC
+from bipy.toolbox.tophat import Tophat
 
 import glob
 from itertools import product, repeat
@@ -102,54 +109,19 @@ def main(config_file):
 
         for stage in config["run"]:
             if stage == "fastqc":
-                _emit_stage_message(stage, curr_files)
-                fastqc_config = _get_stage_config(config, stage)
-                fastqc_args = zip(*product(curr_files, [fastqc_config],
-                                           [config]))
-                view.map(fastqc.run, *fastqc_args)
+                logger.info("Running fastqc on %s." % (curr_files))
+                stage_runner = FastQC(config)
+                view.map(stage_runner, curr_files)
 
             if stage == "cutadapt":
-                _emit_stage_message(stage, curr_files)
-                cutadapt_config = _get_stage_config(config, stage)
-                cutadapt_args = zip(*product(curr_files, [cutadapt_config],
-                                             [config]))
-                cutadapt_outputs = view.map(cutadapt_tool.run, *cutadapt_args)
-                curr_files = cutadapt_outputs
-                logger.info("Fixing mate pair information.")
-                pairs = combine_pairs(curr_files)
-                first = [x[0] for x in pairs]
-                second = [x[1] for x in pairs]
-                logger.info("Forward: %s" % (first))
-                logger.info("Reverse: %s" % (second))
-                fixed = view.map(fastq.fix_mate_pairs_with_config,
-                                 first, second, [config] * len(first))
-                curr_files = list(flatten(fixed))
-
-            if stage == "sickle":
-                _emit_stage_message(stage, curr_files)
-                pairs = combine_pairs(curr_files)
-                first = [x[0] for x in pairs]
-                second = [x[1] for x in pairs]
-                fixed = view.map(sickle.run_with_config,
-                                 first, second, [config] * len(first))
-                curr_files = list(flatten(fixed))
+                logger.info("Running cutadapt on %s." % (curr_files))
+                stage_runner = Cutadapt(config)
+                curr_files = view.map(stage_runner, curr_files)
 
             if stage == "tophat":
-                _emit_stage_message(stage, curr_files)
-                tophat_config = _get_stage_config(config, stage)
-                pairs = combine_pairs(curr_files)
-                first = [x[0] for x in pairs]
-                second = [x[1] for x in pairs]
-                logger.info("first %s" % (first))
-                logger.info("second %s" % (second))
-
-                #tophat_args = zip(*product(first, second, [config["ref"]],
-                #                           ["tophat"], [config]))
-                tophat_outputs = view.map(tophat.run_with_config,
-                                          first, second,
-                                          [config["ref"]] * len(first),
-                                          ["tophat"] * len(first),
-                                          [config] * len(first))
+                logger.info("Running tophat on %s." % (curr_files))
+                stage_runner = Tophat(config)
+                tophat_outputs = view.map(stage_runner, curr_files)
                 bamfiles = view.map(sam.sam2bam, tophat_outputs)
                 bamsort = view.map(sam.bamsort, bamfiles)
                 view.map(sam.bamindex, bamsort)
@@ -232,11 +204,6 @@ def main(config_file):
                                                  "id",
                                                  "ensembl_gene_id",
                                                  "human")
-            #annotated_file = view.map(annotate.annotate_table_with_biomart,
-            #                          [deseq_out],
-            #                          ["id"],
-            #                          ["ensembl_gene_id"],
-            #                          ["human"])
 
     # end gracefully
     stop_cluster()

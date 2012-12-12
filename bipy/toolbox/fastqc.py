@@ -273,7 +273,7 @@ class RNASeqFastQCReport(FastQCReport):
                 "sequence_length_distribution.png": ""}
 
 
-class FastQCStage(AbstractStage):
+class FastQC(AbstractStage):
 
     stage = "fastqc"
 
@@ -286,7 +286,12 @@ class FastQCStage(AbstractStage):
         logger.info("Starting %s on %s" % (self.stage, in_file))
 
     def _end_message(self, in_file):
-        logger.info("%s complete on %s." % (self.stage, in_file))
+        logger.info("%s complete on %s and stored as %s."
+                    % (self.stage, in_file, out_file))
+
+    def _memoized_message(self, in_file, out_file):
+        logger.info("%s already run on %s and stored as %s, skipping."
+                    % (self.stage, in_file, out_file))
 
     def _check_run(self, in_file):
         if not file_exists(in_file):

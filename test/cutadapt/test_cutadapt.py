@@ -27,3 +27,7 @@ class TestCutadapt(unittest.TestCase):
         cutadapt = Cutadapt(self.config)
         out_files = cutadapt(paired)
         self.assertTrue(all(map(filecmp.cmp, correct_files, out_files)))
+
+if __name__ == "__main__":
+    suite = unittest.TestLoader().loadTestsFromTestCase(TestCutadapt)
+    unittest.TextTestRunner(verbosity=2).run(suite)
