@@ -6,20 +6,21 @@
 #+end_example
 
 * Create a platform lsf profile:
-#+begin_example: 
+#+begin_example:
  ipython profile create --parallel --profile=lsf
 #+end_example
 
-* Edit ~/.ipython/profile_odyssey_lsf/ipcluster_config.py
+* Edit ~/.config/.ipython/profile_lsf/ipcluster_config.py
 Add these two lines, which tell iPython you are going to be using Platform LSF to launch
 the controller and all of the worker processes (engines). Also point to
 different batch template files that we will make in a second, the ones iPython
 generates for LSF are not functional.
 #+begin_example:
  c.IPClusterStart.controller_launcher_class = 'LSF'
- c.IPClusterEngines.engine_launcher_class = 'LSF'
+ c.IPClusterStart.engine_launcher_class = 'LSF'
 
- c.LSFControllerLauncher.batch_template_file = u'/n/home05/kirchner/.ipython/profile_lsf/lsf.controller.template' 
+ c.LSFControllerLauncher.batch_template_file = u'/n/home05/kirchner/.ipython/profile_lsf/lsf.controller.template'
+
  c.LSFEngineSetLauncher.batch_template_file = u'/n/home05/kirchner/.ipython/profile_lsf/lsf.engine.template'
 #+end_example
 
@@ -70,7 +71,7 @@ Add this line which sets the tmp directory to something useful, and with space o
 #+begin_src: python :export code
  from IPython.parallel import Client
 
- c = Client(profile="odyssey_lsf")
+ c = Client(profile="lsf")
  c.ids
  c[:].apply_sync(lambda: "Hello, World")
 #+end_src

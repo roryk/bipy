@@ -1,6 +1,6 @@
 """ tool to run fastqc on FASTQ/SAM/BAM files from HTS experiments """
 import subprocess
-from bipy.utils import flatten, remove_suffix
+from bipy.utils import flatten, remove_suffix, is_pair
 from bcbio.utils import safe_makedir, file_exists
 import os
 import logging
@@ -299,7 +299,9 @@ class FastQC(AbstractStage):
 
     def __call__(self, in_file):
         self._start_message(in_file)
-        self._check_run(in_file)
-        out_file = run(in_file, self.stage_config, self.config)
-        self._end_message(in_file)
+        if is_pair(in_file):
+            out_file = [run(x, self.stage_config, self.config) for x in in_file]
+        else:
+            out_file = run(in_file, self.stage_config, self.config)
+        self._end_message(in_file, out_file)
         return out_file
