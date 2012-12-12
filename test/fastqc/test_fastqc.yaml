@@ -6,7 +6,10 @@ cluster:
 dir:
   results: test/fastqc/results/
 
-input: test/fastqc/data/test_fastqc.fastq
+input_single: test/fastqc/data/test_fastqc.fastq
+input_paired:
+  - test/fastqc/data/test_fastqc.fastq
+  - test/fastqc/data/test_fastqc.fastq
 
 log_dir: log
 
