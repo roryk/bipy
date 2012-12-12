@@ -279,13 +279,13 @@ class FastQC(AbstractStage):
 
     def __init__(self, config):
         self.config = config
-        super(FastQCStage, self).__init__(self.config)
+        super(FastQC, self).__init__(self.config)
         self.stage_config = config["stage"][self.stage]
 
     def _start_message(self, in_file):
         logger.info("Starting %s on %s" % (self.stage, in_file))
 
-    def _end_message(self, in_file):
+    def _end_message(self, in_file, out_file):
         logger.info("%s complete on %s and stored as %s."
                     % (self.stage, in_file, out_file))
 
