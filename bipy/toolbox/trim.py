@@ -53,7 +53,7 @@ class TrimGalore(AbstractStage):
 
     def _in2out(self, in_file):
         base, _ = os.path.splitext(in_file)
-        return base + "_trimmed.fq"
+        return base + "_trimmed.fastq"
 
     def __call__(self, in_file):
         raise NotImplementedError("Waiting to hear back from maintainer to "
@@ -110,7 +110,7 @@ class Cutadapt(AbstractStage):
         basename = os.path.basename(in_file)
         base, _ = os.path.splitext(basename)
         safe_makedir(self.out_dir)
-        return os.path.join(self.out_dir, base + "_trimmed.fq")
+        return os.path.join(self.out_dir, base + "_trimmed.fastq")
 
 
     def _get_adapters(self, chemistry):
@@ -148,7 +148,7 @@ class Cutadapt(AbstractStage):
         # if we want to trim the polya tails we have to first remove
         # the adapters and then trim the tail
         if self.stage_config.get("trim_polya", True):
-            temp_cut = tempfile.NamedTemporaryFile(suffix=".fq",
+            temp_cut = tempfile.NamedTemporaryFile(suffix=".fastq",
                                                    dir=self.out_dir)
             # trim off adapters
             cutadapt(in_file, self.options, adapters,
@@ -171,6 +171,7 @@ class Cutadapt(AbstractStage):
     def _get_sickle_file(self, in_file):
         base, ext = os.path.splitext(in_file)
         out_file = base + ".sickle" + ext
+        return out_file
 
     def _run_se(self, in_file):
         # cut polyA tails and adapters off
