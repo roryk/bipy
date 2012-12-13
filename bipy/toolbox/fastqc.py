@@ -76,7 +76,7 @@ def _make_outfile(input_file, config):
 
 def _build_command(input_file, fastqc_config, config):
     program = fastqc_config["program"]
-    options = list(flatten(fastqc_config["options"]))
+    options = map(str, list(flatten(fastqc_config["options"])))
     outdir = _make_outdir(config)
     options += ["--outdir", outdir]
     cmd = list(flatten([program, options, input_file]))

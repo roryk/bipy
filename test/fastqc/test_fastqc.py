@@ -40,6 +40,17 @@ class TestFastqc(unittest.TestCase):
         self.assertTrue(all(map(filecmp.cmp, correct_file, out_table)))
         shutil.rmtree(os.path.join(cur_dir, "results"))
 
+    def test_fastqc_threads(self):
+        config = self.config
+        config["stage"]["fastqc"]["options"] = ["--threads", 2]
+        stage = fastqc.FastQC(config)
+        input_file = self.config["input_single"]
+        correct_file = os.path.join(cur_dir, "data", "correct_fastqc.txt")
+        run_result = stage(input_file)
+        out_table = self._get_result(run_result)
+        self.assertTrue(filecmp.cmp(correct_file, out_table))
+        shutil.rmtree(os.path.join(cur_dir, "results"))
+
 
 if __name__ == "__main__":
     suite = unittest.TestLoader().loadTestsFromTestCase(TestFastqc)
