@@ -75,13 +75,12 @@ stage:
       name: rseqc
 
   htseq-count:
-    name: htseq-count
     program: htseq-count
+    chemistry: [truseq]
+    trim_polya: True
     options:
-      - [--stranded=no]
-      - [--type=exon]
-      - [--idattr=gene_id]
-      - [--mode=union]
+      error-rate: 0.1
+      quality-cutoff: 20
 
   coverage:
     name: coverage
