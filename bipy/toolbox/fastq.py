@@ -8,6 +8,12 @@ mate pair fixing script lifted from Peter Cock
 from Bio import SeqIO
 from bipy.utils import append_stem
 from bcbio.utils import file_exists
+from bipy.log import logger
+
+QUALITY_OFFSETS = {"sanger": 33,
+                   "illumina_1.3+": 64,
+                   "illumina_1.5+": 66,
+                   "illumina_1.8+": 33}
 
 
 def fix_mate_pairs_with_config(fq1, fq2, config):
@@ -32,6 +38,51 @@ def get_read_name_function(suffix):
     else:
         read_name_function = None
     return read_name_function
+
+def _format_fastq_record(record, quality_offset):
+    x = "@" + record.description + "\n"
+    x += str(record.seq) + "\n"
+    x += "+" + record.description + "\n"
+    x += "".join(map(chr, [q + quality_offset for q in
+                           record.letter_annotations['phred_quality']]))
+    return x
+
+def remove_empty_reads(fq1, fq2):
+    """
+    removes reads which are empty a pair of fastq files
+
+    """
+
+    logger.info("Removing empty reads on %s and %s." % (fq1, fq2))
+    # just pick the first one if it can be multiple types
+    quality_offset = QUALITY_OFFSETS[DetectFastqFormat.run(fq1)[0]]
+    fq1_out = append_stem(fq1, "fixed")
+    fq2_out = append_stem(fq2, "fixed")
+    fq1_single = append_stem(fq1, "singles")
+    fq2_single = append_stem(fq2, "singles")
+    if all(map(file_exists, [fq1_out, fq2_out, fq2_single, fq2_single])):
+        return [fq1_out, fq2_out]
+
+    fq1_in = SeqIO.parse(fq1, "fastq")
+    fq2_handle = open(fq2)
+    fq2_in = SeqIO.parse(fq2, "fastq")
+
+    with open(fq1_out, 'w') as fq1_out_handle, open(fq2_out, 'w') as fq2_out_handle, open(fq1_single, 'w') as fq1_single_handle, open(fq2_single, 'w') as fq2_single_handle:
+        for fq1_record, fq2_record in zip(fq1_in, fq2_in):
+            if len(fq1_record.seq) > 0 and len(fq2_record.seq) > 0:
+                fq1_out_handle.write(_format_fastq_record(fq1_record,
+                                                          quality_offset))
+                fq2_out_handle.write(_format_fastq_record(fq2_record,
+                                                          quality_offset))
+            else:
+                if len(fq1_record.seq) > 0:
+                    fq1_single_handle.write(_format_fastq_record(fq1_record,
+                                                                 quality_offset))
+                if len(fq2_record.seq) > 0:
+                    fq2_single_handle.write(_format_fastq_record(fq2_record,
+                                                                 quality_offset))
+
+    return [fq1_out, fq2_out]
 
 
 def fix_mate_pairs(fq1, fq2, f_suffix="/1", r_suffix="/2"):
