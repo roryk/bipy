@@ -45,9 +45,11 @@ def _format_fastq_record(record, quality_offset):
     x += "+" + record.description + "\n"
     x += "".join(map(chr, [q + quality_offset for q in
                            record.letter_annotations['phred_quality']]))
+    x += "\n"
     return x
 
-def remove_empty_reads(fq1, fq2):
+
+def filter_reads_by_length(fq1, fq2, min_length=20):
     """
     removes reads which are empty a pair of fastq files
 
@@ -69,7 +71,7 @@ def remove_empty_reads(fq1, fq2):
 
     with open(fq1_out, 'w') as fq1_out_handle, open(fq2_out, 'w') as fq2_out_handle, open(fq1_single, 'w') as fq1_single_handle, open(fq2_single, 'w') as fq2_single_handle:
         for fq1_record, fq2_record in zip(fq1_in, fq2_in):
-            if len(fq1_record.seq) > 0 and len(fq2_record.seq) > 0:
+            if len(fq1_record.seq) >= min_length and len(fq2_record.seq) >= min_length:
                 fq1_out_handle.write(_format_fastq_record(fq1_record,
                                                           quality_offset))
                 fq2_out_handle.write(_format_fastq_record(fq2_record,
