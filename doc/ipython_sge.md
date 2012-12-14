@@ -18,11 +18,15 @@ ipython profile create --parallel --profile=sge
 ## finally launch a mini cluster from the command line.
     ipcluster start -n 2 --profile=sge
 
-## now you should be able to connect to it and go from inside python:
+## now you should be able to connect to it and do this from inside python:
 ```python
     from IPython.parallel import Client
 
-     c = Client(profile="sge")
+    c = Client(profile="sge")
     c.ids
     c[:].apply_sync(lambda: "Hello, World")
 ```
+
+You should be able to look at the jobs and see three running, one ipcontroller
+and two engines. When you run c[:].apply_sync(lambda: "Hello, World") that executes
+on the two engines.
