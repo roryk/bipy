@@ -2,7 +2,7 @@
 wrappers around Trim galore! and cutadapt for trimming off common adapter
 sequences used in NGS
 
-Trim galore!: http://www.bioinformatics.babraham.ac.uk/projects/trim_galore/
+trim galore!: http://www.bioinformatics.babraham.ac.uk/projects/trim_galore/
 cutadapt: https://github.com/marcelm/cutadapt
 sickle: https://github.com/najoshi/sickle
 """
@@ -18,6 +18,7 @@ import yaml
 from Bio.Seq import Seq
 import tempfile
 from bipy.toolbox.fastq import DetectFastqFormat
+from bipy.toolbox import fastq
 
 with resource_stream(__name__, 'data/adapters.yaml') as in_handle:
     ADAPTERS = yaml.load(in_handle)
@@ -90,6 +91,7 @@ class Cutadapt(AbstractStage):
         self.user_adapters = self.stage_config.get("adapters", [])
         self.out_dir = os.path.join(get_in(self.config, ("dir", "results"),
                                            "results"), self.stage)
+        self.length_cutoff = self.stage_config.get("length_cutoff", 30)
 
     def _detect_fastq_format(self, in_file):
         formats = DetectFastqFormat.run(in_file)
@@ -168,42 +170,30 @@ class Cutadapt(AbstractStage):
                          _out=temp_out)
             return out_file
 
-    def _get_sickle_file(self, in_file):
+    def _get_lf_file(self, in_file):
         base, ext = os.path.splitext(in_file)
-        out_file = base + ".sickle" + ext
+        out_file = base + ".fixed" + ext
         return out_file
 
     def _run_se(self, in_file):
         # cut polyA tails and adapters off
         trimmed_file = self._cut_file(in_file)
-        sickle = sh.Command(get_in(self.config,
-                                   ("stage", "sickle", "program"),
-                                   "sickle"))
-        # remove reads that don't pass the length cut
-        out_file = self._get_sickle_file(trimmed_file)
-        #out_file = append_stem(trimmed_file, "sickle")
-        quality_format = self._detect_fastq_format(in_file)
+        out_file = self._get_lf_file(trimmed_file)
         if file_exists(out_file):
             return out_file
-        with file_transaction(out_file) as temp_out:
-            sickle.se(f=trimmed_file, l=20, o=temp_out, t=quality_format)
+        fastq.filter_single_reads_by_length(trimmed_file,
+                                            self.length_cutoff)
 
         return out_file
 
     def _run_pe(self, in_files):
         trimmed_files = map(self._cut_file, in_files)
-        sickle = sh.Command(get_in(self.config,
-                                   ("stage", "sickle", "program"),
-                                   "sickle"))
-        out_files = map(self._get_sickle_file, trimmed_files)
+        out_files = map(self._get_lf_file, trimmed_files)
         quality_format = self._detect_fastq_format(in_files[0])
-        single_file = append_stem(trimmed_files[0], "singles")
         if all(map(file_exists, out_files)):
             return out_files
-        with file_transaction(out_files) as tmp_out_files:
-            sickle.pe(f=trimmed_files[0], r=trimmed_files[1], l=20,
-                      o=tmp_out_files[0], p=tmp_out_files[1],
-                      t=quality_format, s=single_file)
+        fastq.filter_reads_by_length(trimmed_files[0], trimmed_files[1],
+                                     self.length_cutoff)
 
         return out_files
 
