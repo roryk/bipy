@@ -91,7 +91,7 @@ class Bowtie(AbstractStage):
         defaults = {"q": True, "n": 2, "k": 1,
                     "X": 2000, "best": True,
                     "sam": True,
-                    "phred64-quals": True}
+                    "phred33-quals": True}
         self.options = dict(defaults.items() +
                             self.stage_config.get("options", {}).items())
         self.bowtie = sh.Command(self.stage_config.get("program", "bowtie"))
