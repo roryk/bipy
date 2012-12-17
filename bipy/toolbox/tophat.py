@@ -88,12 +88,13 @@ class Bowtie(AbstractStage):
     def __init__(self, config):
         self.config = config
         self.stage_config = config["stage"][self.stage]
-        defaults = {"q": True, "n": 2, "k": 1,
-                    "X": 2000, "best": True,
-                    "sam": True,
-                    "phred33-quals": True}
-        self.options = dict(defaults.items() +
-                            self.stage_config.get("options", {}).items())
+        # defaults = {"q": True, "n": 2, "k": 1,
+        #            "X": 2000, "best": True,
+        #            "sam": True,
+        #            "phred64-quals": True}
+        #self.options = dict(defaults.items() +
+        #                    self.stage_config.get("options", {}).items())
+        self.options = self.stage_config.get("options", {}).items()
         self.bowtie = sh.Command(self.stage_config.get("program", "bowtie"))
         self.out_prefix = os.path.join(get_in(self.config,
                                               ("dir", "results"), "results"),
