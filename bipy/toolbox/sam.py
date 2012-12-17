@@ -48,6 +48,23 @@ def is_sam(in_file):
         return False
 
 
+def only_mapped(in_file, out_file=None):
+    if out_file is None:
+        out_file = append_stem(in_file, "mapped")
+    if file_exists(out_file):
+        return out_file
+    sh.samtools.view(in_file, S=True, F=4, o=out_file)
+    return out_file
+
+
+def only_unmapped(in_file, out_file=None):
+    if out_file is None:
+        out_file = append_stem(in_file, "unmapped")
+    if file_exists(out_file):
+        return out_file
+    sh.samtools.view(in_file, S=True, f=4, o=out_file)
+    return out_file
+
 def sam2bam(in_file, out_file=None):
     """ convert a SAM file to a BAM file. if the file is already a
     BAM file, return the BAM file name """
@@ -207,3 +224,12 @@ class Disambiguate(AbstractStage):
             return -1
         else:
             return 0
+
+    def _az_score_read_pair(self):
+        # figure out the scoring AZ used for this
+        # need something to possibly pick out all four reads
+        # they take all four reads
+        # sort the scores
+        # score = # multiple alignments + # gaps + # mismatches
+        # maybe throw out multiple alignments at the tophat stage?
+        pass
