@@ -10,6 +10,9 @@ from bipy.utils import append_stem
 from bcbio.utils import file_exists
 from bipy.log import logger
 from bcbio.distributed.transaction import file_transaction
+from bipy.pipeline.stages import AbstractStage
+import os
+from itertools import izip
 
 
 QUALITY_OFFSETS = {"sanger": 33,
@@ -89,7 +92,7 @@ def filter_reads_by_length(fq1, fq2, min_length=30):
     fq2_in = SeqIO.parse(fq2, quality_type)
 
     with open(fq1_out, 'w') as fq1_out_handle, open(fq2_out, 'w') as fq2_out_handle, open(fq1_single, 'w') as fq1_single_handle, open(fq2_single, 'w') as fq2_single_handle:
-        for fq1_record, fq2_record in zip(fq1_in, fq2_in):
+        for fq1_record, fq2_record in izip(fq1_in, fq2_in):
             if len(fq1_record.seq) >= min_length and len(fq2_record.seq) >= min_length:
                 fq1_out_handle.write(fq1_record.format(quality_type))
                 fq2_out_handle.write(fq2_record.format(quality_type))
@@ -176,3 +179,38 @@ class DetectFastqFormat(object):
         quality = self.run(in_file, MAX_RECORDS)
         logger.info("Detected quality format of %s in %s." % (quality, in_file))
         return self.run(in_file, MAX_RECORDS)
+
+
+class FastqGroomer(AbstractStage):
+    """
+    Grooms a FASTQ file from its input format to sanger format
+
+    """
+    stage = "groom"
+
+    def out_file(self, in_file):
+        """
+        returns the expected output file name from the in_file
+
+        example: "control_1.fastq" -> "control_1.groom.fastq"
+
+        """
+        results_dir = self.config["dirs"].get("results", "results")
+        stage_dir = os.path.join(results_dir, self.stage)
+        out_file = append_stem(os.path.basename(in_file), "groom")
+        return os.path.join(stage_dir, out_file)
+
+    def __init__(self, config):
+        self.config = config
+
+    def _run(self, in_file):
+        pass
+
+    def _detect_format(self, in_file):
+        quality_format = DetectFastqFormat(in_file)
+        return QUALITY_TYPE[quality_format]
+
+
+
+    def __call__(self, in_file):
+        out_file = self.out_file(in_file)
