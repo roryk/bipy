@@ -271,8 +271,9 @@ class HardClipper(AbstractStage):
 
     def __init__(self, config):
         self.config = config
-        self.bases = config[self.stage].get("bases", 8)
-        self.right_side = config[self.stage].get("right_side", True)
+        self.stage_config = config["stage"][self.stage]
+        self.bases = self.stage_config.get("bases", 8)
+        self.right_side = self.stage_config.get("right_side", True)
 
     def out_file(self, in_file):
         return append_stem(in_file, "clip")
