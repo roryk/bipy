@@ -77,7 +77,7 @@ class Tophat(AbstractStage):
         else:
             out_file = run_with_config(in_file[0], None, self.ref,
                                        self.stage, self.config)
-        self._end_message(in_file, out_file)
+        self._end_message(in_file)
         return out_file
 
 
@@ -128,7 +128,6 @@ class Bowtie(AbstractStage):
         out_file = self.out_file(in_file)
 
         if file_exists(out_file):
-            self._memoized_message(in_file, out_file)
             return out_file
 
         with file_transaction(out_file) as tmp_out_file:
@@ -136,6 +135,6 @@ class Bowtie(AbstractStage):
                 self._bowtie_pe(in_file, tmp_out_file)
             else:
                 self._bowtie_se(in_file, tmp_out_file)
-        self._end_message(in_file, out_file)
+        self._end_message(in_file)
 
         return out_file
