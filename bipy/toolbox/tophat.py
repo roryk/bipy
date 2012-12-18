@@ -94,7 +94,7 @@ class Bowtie(AbstractStage):
         #            "phred64-quals": True}
         #self.options = dict(defaults.items() +
         #                    self.stage_config.get("options", {}).items())
-        self.options = self.stage_config.get("options", {}).items()
+        self.options = self.stage_config.get("options", {})
         self.bowtie = sh.Command(self.stage_config.get("program", "bowtie"))
         self.out_prefix = os.path.join(get_in(self.config,
                                               ("dir", "results"), "results"),
