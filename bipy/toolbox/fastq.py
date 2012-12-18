@@ -27,6 +27,7 @@ QUALITY_TYPE = {"sanger": "fastq-sanger",
                 "illumina_1.8+": "fastq-sanger"}
 
 
+
 def fix_mate_pairs_with_config(fq1, fq2, config):
     if "pair_info" not in config:
         f_suffix = None
@@ -49,6 +50,49 @@ def get_read_name_function(suffix):
     else:
         read_name_function = None
     return read_name_function
+
+
+def _trim_read(record, bases=8, right_side=True):
+    if bases >= len(record):
+        record.seq = ""
+        record.letter_annotations = {}
+        return record
+
+    if right_side:
+        return record[:-bases]
+    else:
+        return record[:bases]
+
+
+def hard_clip(in_file, bases=8, right_side=True, out_file=None):
+    """
+    hard clip a fastq file by removing N bases from each read
+    bases is the number of bases to clip
+    right_side is True to trim from the right side, False to trim from
+    the left
+
+    example: hard_clip(fastq_file, bases=4, end="5prime")
+
+    """
+    if right_side:
+        logger.info("Hard clipping %d bases from the right side of "
+                    "reads in %s." % (bases, in_file))
+    else:
+        logger.info("Hard clipping %d bases from the left side of "
+                    "reads in %s." % (bases, in_file))
+
+    quality_type = QUALITY_TYPE[DetectFastqFormat.run(in_file)]
+    out_file = append_stem(in_file, "clip")
+    if file_exists(out_file):
+        return out_file
+    in_iterator = SeqIO.parse(in_file, quality_type)
+
+    out_iterator = (_trim_read(record, bases, right_side) for
+                    record in in_iterator)
+    with file_transaction(out_file) as tmp_out_file:
+        with open(tmp_out_file, "w") as out_handle:
+            SeqIO.write(out_iterator, out_handle, quality_type)
+    return out_file
 
 
 def filter_single_reads_by_length(in_file, min_length=30):
@@ -210,7 +254,8 @@ class FastqGroomer(AbstractStage):
         quality_format = DetectFastqFormat(in_file)
         return QUALITY_TYPE[quality_format]
 
-
-
     def __call__(self, in_file):
         out_file = self.out_file(in_file)
+        if file_exists(out_file):
+            return out_file
+        raise NotImplementedError
