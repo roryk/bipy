@@ -259,3 +259,27 @@ class FastqGroomer(AbstractStage):
         if file_exists(out_file):
             return out_file
         raise NotImplementedError
+
+
+class HardClipper(AbstractStage):
+    """
+    Hard clips records in a FASTQ file, clipping off bases from either
+    end
+
+    """
+    stage = "hard_trim"
+
+    def __init__(self, config):
+        self.config = config
+        self.bases = config[self.stage].get("bases", 8)
+        self.right_side = config[self.stage].get("right_side", True)
+
+    def out_file(self, in_file):
+        return append_stem(in_file, "clip")
+
+    def __call__(self, in_file):
+        out_file = self.out_file(in_file)
+        if file_exists(out_file):
+            return out_file
+        hard_clip(in_file, self.bases, self.right_side, out_file)
+        return out_file
