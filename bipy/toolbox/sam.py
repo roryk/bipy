@@ -53,7 +53,7 @@ def only_mapped(in_file, out_file=None):
         out_file = append_stem(in_file, "mapped")
     if file_exists(out_file):
         return out_file
-    sh.samtools.view(in_file, S=True, F=4, o=out_file)
+    sh.samtools.view(in_file, h=True, S=True, F=4, o=out_file)
     return out_file
 
 
@@ -62,7 +62,7 @@ def only_unmapped(in_file, out_file=None):
         out_file = append_stem(in_file, "unmapped")
     if file_exists(out_file):
         return out_file
-    sh.samtools.view(in_file, S=True, f=4, o=out_file)
+    sh.samtools.view(in_file, h=True, S=True, f=4, o=out_file)
     return out_file
 
 def sam2bam(in_file, out_file=None):
