@@ -267,7 +267,7 @@ class HardClipper(AbstractStage):
     end
 
     """
-    stage = "hard_trim"
+    stage = "hard_clip"
 
     def __init__(self, config):
         self.config = config
