@@ -1,6 +1,7 @@
 import yaml
 import unittest
 from bipy.toolbox import htseq_count
+from bcbio.utils import safe_makedir
 import os
 
 STAGENAME = "htseq-count"
@@ -38,14 +39,10 @@ class TestHtseqcount(unittest.TestCase):
     def test_combine(self):
         to_combine = self.config["to_combine"]
         out_file = "results/%s/combined_counts.counts" % (STAGENAME)
+        safe_makedir(os.path.dirname(out_file))
         df = htseq_count.combine_counts(to_combine, None, out_file=out_file)
         self.assertTrue(os.path.exists(out_file))
         self.assertTrue(os.path.getsize(out_file) > 0)
-
-    def test_rpkm(self):
-        rpkms = htseq_count.calculate_rpkm(self.input_file, self.gtf)
-        rpkms.to_csv("results/%s/rpkms.txt" % (STAGENAME))
-
 
 
 if __name__ == "__main__":
