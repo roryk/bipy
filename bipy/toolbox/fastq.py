@@ -61,7 +61,7 @@ def _trim_read(record, bases=8, right_side=True):
     if right_side:
         return record[:-bases]
     else:
-        return record[:bases]
+        return record[bases:]
 
 
 def hard_clip(in_file, bases=8, right_side=True, out_file=None):
@@ -81,7 +81,7 @@ def hard_clip(in_file, bases=8, right_side=True, out_file=None):
         logger.info("Hard clipping %d bases from the left side of "
                     "reads in %s." % (bases, in_file))
 
-    quality_type = QUALITY_TYPE[DetectFastqFormat.run(in_file)]
+    quality_type = QUALITY_TYPE[DetectFastqFormat.run(in_file)[0]]
     out_file = append_stem(in_file, "clip")
     if file_exists(out_file):
         return out_file
