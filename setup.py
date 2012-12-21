@@ -13,8 +13,9 @@ setup(name="bipy",
       dependency_links = ['https://github.com/roryk/sh/tarball/master#egg=sh-1.07'],
       package_data={'bipy': ['toolbox/data/*']},
       install_requires=[
+          "cython",
           "ipython >= 0.11",
-          "bcbio",
+          "bcbio-nextgen",
           "sh == 1.07",
           "biopython == 1.60",
           "cutadapt == 1.2.1"])
