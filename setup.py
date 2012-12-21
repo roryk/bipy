@@ -10,11 +10,11 @@ setup(name="bipy",
       license="MIT",
       namespace_packages=["bipy"],
       packages=find_packages(),
-      dependency_links = ['https://github.com/roryk/sh/tarball/master#egg=sh-1.08'],
+      dependency_links = ['https://github.com/roryk/sh/tarball/master#egg=sh-1.07'],
       package_data={'bipy': ['toolbox/data/*']},
       install_requires=[
           "ipython >= 0.11",
           "bcbio",
-          "sh == 1.08",
+          "sh == 1.07",
           "biopython == 1.60",
           "cutadapt == 1.2.1"])
