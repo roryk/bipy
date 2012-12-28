@@ -276,7 +276,10 @@ class HardClipper(AbstractStage):
         self.right_side = self.stage_config.get("right_side", True)
 
     def out_file(self, in_file):
-        return append_stem(in_file, "clip")
+        results_dir = self.config["dir"].get("results", "results")
+        out_dir = os.path.join(results_dir, self.stage)
+        out_base = append_stem(os.path.basename(in_file), "clip")
+        return os.path.join(out_dir, out_base)
 
     def __call__(self, in_file):
         out_file = self.out_file(in_file)
