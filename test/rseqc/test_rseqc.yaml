@@ -17,6 +17,8 @@ annotation:
   genome: mm9
   file: test/data/mouse_chr17.gtf
 
+#gtf: test/data/mouse_chr17.gtf
+
 program:
   htseq-count: htseq-count
 
