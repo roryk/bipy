@@ -1,4 +1,6 @@
-#+title: step by step guide for getting ipython going with platform lsf on odyssey
+============================================================
+Guide for getting ipython going with platform lsf on odyssey
+============================================================
 
 * Load the iPython module on Odyssey:
 #+begin_example:
