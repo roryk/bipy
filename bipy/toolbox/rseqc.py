@@ -1,5 +1,6 @@
 import os
-from bipy.utils import replace_suffix, which, remove_suffix, append_stem
+from bipy.utils import (replace_suffix, which, remove_suffix, append_stem,
+                        prepare_ref_file)
 import sh
 from bipy.log import logger
 from bcbio.utils import file_exists, safe_makedir, add_full_path
@@ -11,6 +12,8 @@ import abc
 from mako.template import Template
 from bipy.toolbox.reporting import LatexReport, safe_latex
 from bcbio.distributed.transaction import file_transaction
+from bipy.pipeline.stages import AbstractStage
+from bcbio.broad import BroadRunner, picardrun
 
 
 def program_exists(path):
@@ -364,6 +367,7 @@ def _get_out_prefix(in_file, config, out_prefix, prefix):
 
 def _get_gtf(config):
     gtf = config["annotation"].get("file", None)
+    #gtf = config.get("gtf", None)
     if not gtf or not file_exists(gtf):
         logger.error("genebody_coverage needs a GTF file passed to it.")
         exit(1)
@@ -465,3 +469,32 @@ class RseqcReport(LatexReport):
     % endfor
 % endif
 """
+
+
+class RNASeqMetrics(AbstractStage):
+
+    stage = "rnaseq_metrics"
+
+    def __init__(self, config):
+        self.config = config
+        self.stage_config = config["stage"][self.stage]
+        self.ribo = self.stage_config["ribo"]
+        self.picard = BroadRunner(config["program"]["picard"])
+        self.ref = prepare_ref_file(self.stage_config["ref"],
+                                    self.config)
+
+    def out_file(self, in_file):
+        results_dir = self.config["dir"].get("results", "results")
+        out_dir = os.path.join(results_dir, self.stage)
+        safe_makedir(out_dir)
+        out_file = replace_suffix(os.path.basename(in_file), "metrics")
+        return os.path.join(out_dir, out_file)
+
+    def __call__(self, in_file):
+        out_file = self.out_file(in_file)
+        if file_exists(out_file):
+            return out_file
+        out_file = picardrun.picard_rnaseq_metrics(self.picard, in_file,
+                                                   self.ref, self.ribo,
+                                                   out_file)
+        return out_file
