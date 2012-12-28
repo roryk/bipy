@@ -20,21 +20,21 @@ class TestRseqc(unittest.TestCase):
         self.gtf = self.config["annotation"]["file"]
         self.stage_config = self.config["stage"][STAGENAME]
 
-    def test_documentation(self):
-        self.test_genebody_coverage()
-        self.test_RPKM_saturation()
-        base_file = os.path.basename(self.config["input"])
-        base_dir = os.path.join(self.config["dir"]["results"],
-                                "rseqc",
-                                base_file)
-        parser = rseqc.RseqcParser(base_dir)
-        figures = parser.get_rseqc_graphs()
-        report = rseqc.RseqcReport()
-        section = report.generate_report(base_file, figures)
-        print section
-        out_file = os.path.join(base_dir, "rseqc_report.pdf")
-        reporting.LatexPdf.generate_pdf([section], out_file)
-        self.assertTrue(file_exists(out_file))
+    ## def test_documentation(self):
+    ##     self.test_genebody_coverage()
+    ##     self.test_RPKM_saturation()
+    ##     base_file = os.path.basename(self.config["input"])
+    ##     base_dir = os.path.join(self.config["dir"]["results"],
+    ##                             "rseqc",
+    ##                             base_file)
+    ##     parser = rseqc.RseqcParser(base_dir)
+    ##     figures = parser.get_rseqc_graphs()
+    ##     report = rseqc.RseqcReport()
+    ##     section = report.generate_report(base_file, figures)
+    ##     print section
+    ##     out_file = os.path.join(base_dir, "rseqc_report.pdf")
+    ##     reporting.LatexPdf.generate_pdf([section], out_file)
+    ##     self.assertTrue(file_exists(out_file))
 
     def test_bam2bigwig(self):
         out_file = rseqc.bam2bigwig(self.input_file, self.config)
