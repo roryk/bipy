@@ -13,17 +13,11 @@ dir:
   data: data # raw data goes here. make everything read only for safety
   meta: meta # metadata (annotation, etc) goes here
 
+test_pipeline: True
+
 log_dir: log
 
-input_dirs:
-  - N2_N4
-  - N5_N8
-  - sample_lane2
-
-sample_parse:
-  identifier: Pb*.fastq
-  delimiter: _
-  fields: [sample, condition, trial, barcode, read]
+input_dir: input_dir
 
 ref: /n/home05/kirchner/hsph/biodata/genomes/Hsapiens/hg19/iGenomes/Homo_sapiens/Ensembl/GRCh37/Sequence/BowtieIndex/genome
 gtf: /n/home05/kirchner/hsph/biodata/genomes/Hsapiens/hg19/iGenomes/Homo_sapiens/Ensembl/GRCh37/Annotation/Genes/genes.gtf
