@@ -1,0 +1,7 @@
+cluster:
+  name: odyssey
+  profile: lsf
+  cores: 4
+  work: log
+
+log_dir: /Users/rory/cache/bipy/log
