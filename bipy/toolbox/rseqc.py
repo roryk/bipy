@@ -472,6 +472,22 @@ class RseqcReport(LatexReport):
 
 
 class RNASeqMetrics(AbstractStage):
+    """
+    Runs the Picard tool RNASeqMetrics.
+    http://picard.sourceforge.net/picard-metric-definitions.shtml#RnaSeqMetrics
+
+    YAML configuration file must have the following fields:
+    program:
+        picard: /path/to/picard/jars
+    rnaseq_metrics:
+        ref:
+            name: name_of_organism
+            file: /path/to/refflat_file
+        ribo: /path/to/rrna_interval_list_file
+
+    Interval list file format:
+    http://picard.sourceforge.net/javadoc/net/sf/picard/util/IntervalList.html
+    """
 
     stage = "rnaseq_metrics"
 
