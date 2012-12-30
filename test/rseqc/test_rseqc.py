@@ -81,6 +81,9 @@ class TestRseqc(unittest.TestCase):
         print out_file_RPKM_saturation
         self.assertTrue(file_exists(out_file_RPKM_saturation))
 
+    def test_RNASeqMetrics(self):
+        rsm = rseqc.RNASeqMetrics(self.config)
+        out_file = rsm(self.input_file)
 
 
 
