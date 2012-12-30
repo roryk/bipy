@@ -28,5 +28,13 @@ stage:
   rseqc:
     name: rseqc
 
+  rnaseq_metrics:
+    program: picard
+    ref:
+      name: mouse
+      file: test/data/mouse_chr17_refflat.txt
+    ribo:  meta/rrna_final.bed
+
+
 run:
-  [ rseqc ]
+  [ rseqc, rnaseq_metrics ]
