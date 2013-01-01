@@ -495,7 +495,7 @@ class RNASeqMetrics(AbstractStage):
         self.config = config
         self.stage_config = config["stage"][self.stage]
         self.ribo = self.stage_config["ribo"]
-        self.picard = BroadRunner(config["program"]["picard"])
+        self.picard = BroadRunner(config["program"]["picard"], None, {})
         self.ref = prepare_ref_file(self.stage_config["ref"],
                                     self.config)
 
