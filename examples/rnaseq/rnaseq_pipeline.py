@@ -116,7 +116,7 @@ def main(config_file):
             nrun = len(curr_files)
             ref = prepare_ref_file(config["stage"][stage]["ref"], config)
             ribo = config["stage"][stage]["ribo"]
-            picard = BroadRunner(config["program"]["picard"])
+            picard = BroadRunner(config["program"]["picard"], None, {})
             out_dir = os.path.join(results_dir, stage)
             safe_makedir(out_dir)
             out_files = [replace_suffix(os.path.basename(x),
