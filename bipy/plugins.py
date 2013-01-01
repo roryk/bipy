@@ -100,15 +100,10 @@ class StageRepository(object):
                 continue
             if issubclass(thing, AbstractStage):
                 # found a plugin!
-                self.plugins[thing.__name__] = thing
+                self.plugins[thing.stage] = thing
 
     def __getitem__(self, key):
-        try:
-            plugin = self.plugins[key]
-        except KeyError:
-            logger.error("Can't find a plugin for %s.")
-            sys.exit()
-        return plugin
+        return self.plugins.get(key, {})
 
 """
 Repository = None
