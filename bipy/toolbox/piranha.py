@@ -1,7 +1,6 @@
 from bipy.pipeline.stages import AbstractStage
 from bipy.utils import replace_suffix, in2out
 from bcbio.utils import file_exists, safe_makedir
-from sh import Piranha
 from bipy.log import logger
 import os
 
@@ -20,10 +19,10 @@ def run(in_file, bin_size=30, covariate=None, out_file=None):
 
     if covariate and file_exists(covariate):
         print "%s, %s, %s, %s" % (in_file, covariate, str(bin_size), out_file)
-        Piranha("-s", in_file, covariate, b=bin_size, o=out_file)
+        sh.piranha("-s", in_file, covariate, b=bin_size, o=out_file)
     else:
         print "%s, %s, %s" % (in_file, str(bin_size), out_file)
-        Piranha("-s", in_file, b=bin_size, o=out_file)
+        sh.piranha("-s", in_file, b=bin_size, o=out_file)
 
     return out_file
 
