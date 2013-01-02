@@ -64,15 +64,14 @@ class StageRepository(object):
     def __init__(self, config):
         self.config = config
         self.plugins = {}
-        if get_in(config, ("dir", "plugin")):
-            self.scan(config("dir", "plugin"))
+        if get_in(config, ("dir", "plugins")):
+            self.scan(get_in(config, ("dir", "plugins")))
 
     def scan(self, plugin_dir=None):
 
-        if plugin_dir is None:
-            files = os.listdir(PluginDirectory)
-        else:
-            files = os.listdir(plugin_dir)
+        files = os.listdir(PluginDirectory)
+        if plugin_dir:
+            files += os.listdir(plugin_dir)
 
         plugins = []
         for fn in files:
