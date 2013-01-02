@@ -1,0 +1,7 @@
+dir:
+  results: results/tests
+  data: data
+  meta: meta
+  tmp: tmp
+  ref: test/data/
+  plugins: test/plugins
