@@ -2,9 +2,6 @@ import yaml
 import unittest
 from bipy.pipeline.stages import AbstractStage
 from bipy.plugins import StageRepository
-from bipy.toolbox.fastqc import FastQC
-from bcbio.utils import safe_makedir, file_exists
-import inspect
 import os
 
 STAGENAME = "plugins"
