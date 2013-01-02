@@ -71,6 +71,7 @@ class StageRepository(object):
 
         files = os.listdir(PluginDirectory)
         if plugin_dir:
+            sys.path.append(plugin_dir)
             files += os.listdir(plugin_dir)
 
         plugins = []
@@ -102,7 +103,7 @@ class StageRepository(object):
                 self.plugins[thing.stage] = thing
 
     def __getitem__(self, key):
-        return self.plugins.get(key, {})
+        return self.plugins.get(key, None)
 
 """
 Repository = None
