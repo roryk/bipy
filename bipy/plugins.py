@@ -64,8 +64,9 @@ class StageRepository(object):
     def __init__(self, config):
         self.config = config
         self.plugins = {}
-        if get_in(config, ("dir", "plugins")):
-            self.scan(get_in(config, ("dir", "plugins")))
+        self.scan(get_in(config, "dir", "plugins"))
+        #        if get_in(config, ("dir", "plugins")):
+        #    self.scan(get_in(config, ("dir", "plugins")))
 
     def scan(self, plugin_dir=None):
 
