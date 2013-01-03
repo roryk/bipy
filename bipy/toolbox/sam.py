@@ -23,7 +23,7 @@ def bam2sam(in_file, out_file=None):
         return out_file
 
     with file_transaction(out_file) as tmp_out_file:
-        sh.samtools.view(in_file, _out=tmp_out_file)
+        sh.samtools.view(in_file, "-h", _out=tmp_out_file)
 
     return out_file
 
