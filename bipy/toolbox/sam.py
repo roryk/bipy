@@ -159,9 +159,10 @@ class Disambiguate(AbstractStage):
 
     def _get_out_files(self, pair, tag):
         out_fnames = [append_stem(x, tag) for x in pair]
+        out_bases = map(os.path.basename, out_fnames)
         # add directories
         out_files = [os.path.join(self.out_dir, x, y) for
-                     x, y in zip(self.organisms, out_fnames)]
+                     x, y in zip(self.organisms, out_bases)]
         return out_files
 
     def __call__(self, pair):
