@@ -3,7 +3,7 @@ wrappers around samtools
 """
 import sh
 from bipy.utils import replace_suffix, append_stem, is_pair
-from bcbio.utils import file_exists
+from bcbio.utils import file_exists, safe_makedir
 from bcbio.distributed.transaction import file_transaction, _flatten_plus_safe
 import os
 import pysam
@@ -146,14 +146,27 @@ class Disambiguate(AbstractStage):
 
     """
 
+    stage = "disambiguate"
+    organisms = ("human", "mouse")
+
     def __init__(self, config):
         self.config = config
         self.stage_config = config["stage"]["disambiguate"]
         self.cutoff = self.stage_config.get("cutoff", 20)
+        self.out_dir = os.path.join(config["dir"]["results"], self.stage)
+        map(safe_makedir, [os.path.join(self.out_dir, x)
+                           for x in self.organisms])
+
+    def _get_out_files(self, pair, tag):
+        out_fnames = [append_stem(x, tag) for x in pair]
+        # add directories
+        out_files = [os.path.join(self.out_dir, x, y) for
+                     x, y in zip(self.organisms, out_fnames)]
+        return out_files
 
     def __call__(self, pair):
-        unique_files = [append_stem(x, "unique") for x in pair]
-        ambig_files = [append_stem(x, "ambiguous") for x in pair]
+        unique_files = self._get_out_files(pair, "unique")
+        ambig_files = self._get_out_files(pair, "ambiguous")
         if all(map(os.path.exists, unique_files + ambig_files)):
             return [unique_files, ambig_files]
 
