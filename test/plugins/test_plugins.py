@@ -2,7 +2,9 @@ import yaml
 import unittest
 from bipy.pipeline.stages import AbstractStage
 from bipy.plugins import StageRepository
+from bcbio.utils import safe_makedir
 import os
+import tempfile
 
 STAGENAME = "plugins"
 
@@ -15,6 +17,9 @@ class TestPlugins(unittest.TestCase):
         with open(self.config_file) as in_handle:
             self.config = yaml.load(in_handle)
         self.repository = StageRepository(self.config)
+        self.out_dir = os.path.join(self.config["dir"]["results"], "test",
+                                    STAGENAME)
+        safe_makedir(self.out_dir)
 
     def test_repository(self):
         """
@@ -37,10 +42,17 @@ class TestPlugins(unittest.TestCase):
         test that the custom plugin directory is working
 
         """
-        testplugin = self.repository["test_plugin"](self.config)
+        plugin_file = self._make_test_class()
+        plugin_dir = os.path.dirname(plugin_file.name)
+        repo = StageRepository({"dir": {"plugins": plugin_dir}})
+        testplugin = repo["test_plugin"](self.config)
         self.assertTrue(testplugin("Test") == "Test")
 
+    def _make_test_class(self):
+        temp = tempfile.NamedTemporaryFile(suffix=".py")
 
+        test_class = """
+from bipy.pipeline.stages import AbstractStage
 class TestPlugin(AbstractStage):
 
     stage = "test_plugin"
@@ -50,6 +62,10 @@ class TestPlugin(AbstractStage):
 
     def __call__(self, string):
         return string
+"""
+        temp.write(test_class)
+        temp.flush()
+        return temp
 
 if __name__ == "__main__":
     suite = unittest.TestLoader().loadTestsFromTestCase(TestPlugins)

@@ -21,6 +21,9 @@ from bipy.pipeline.stages import AbstractStage
 from bipy.utils import get_in
 from bipy.log import logger
 
+import types
+import sys
+
 PluginDirectory = os.path.join(os.path.split(__file__)[0], "toolbox")
 #PluginDirectory = (os.path.split(__file__)[0] or '.')
 PackagePrefix = str.join('.', __name__.split('.')[:1])
@@ -65,8 +68,13 @@ class StageRepository(object):
         self.config = config
         self.plugins = {}
         #self.scan(get_in(config, "dir", "plugins"))
-        if get_in(config, ("dir", "plugins")):
-            self.scan(get_in(config, ("dir", "plugins")))
+        plugin_dir = get_in(config, ("dir", "plugins"))
+        if plugin_dir:
+            logger.info("Scanning %s for plugins." % plugin_dir)
+            plugins = types.ModuleType("plugins")
+            plugins.__path__ = [plugin_dir]
+            sys.modules["plugins"] = plugins
+            self.scan(plugin_dir)
         else:
             self.scan()
 
