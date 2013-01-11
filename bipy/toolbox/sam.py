@@ -34,7 +34,7 @@ def is_sam_or_bam(in_file):
 
 def is_bam(in_file):
     _, ext = os.path.splitext(in_file)
-    if ext is ".bam":
+    if ext == ".bam":
         return True
     else:
         return False
@@ -42,7 +42,7 @@ def is_bam(in_file):
 
 def is_sam(in_file):
     _, ext = os.path.splitext(in_file)
-    if ext is ".sam":
+    if ext == ".sam":
         return True
     else:
         return False
