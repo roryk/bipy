@@ -1,7 +1,7 @@
 cluster:
   name: odyssey
-  profile: lsf
+  profile: default
   cores: 4
-  work: log
+  delay: 10
 
 log_dir: /Users/rory/cache/bipy/log
