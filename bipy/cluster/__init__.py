@@ -95,6 +95,7 @@ class Cluster(object):
                                        "--daemonize=True",
                                        "--delay=" + str(self.delay),
                                        "--log-level=" + str(self._log_level),
+                                       "--debug",
                                        narg, parg])
 
     def client(self):
