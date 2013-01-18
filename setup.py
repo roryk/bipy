@@ -16,8 +16,8 @@ setup(name="bipy",
           "cython",
           "ipython >= 0.11",
           "bcbio-nextgen",
-          "sh == 1.07",
           "biopython == 1.60",
           "cutadapt == 1.2.1",
           "pandas == 0.1.0",
-          "HTSeq == 0.5.3p9"])
+          "HTSeq == 0.5.3p9",
+          "sh"])
