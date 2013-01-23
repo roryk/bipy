@@ -8,6 +8,7 @@ import stat
 import difflib
 from itertools import repeat
 from functools import reduce
+import fnmatch
 
 
 def in2out(in_file, word, transform=True, out_dir=None):
@@ -379,3 +380,10 @@ def is_pair(arg):
 
     """
     return is_sequence(arg) and len(arg) == 2
+
+def locate(pattern, root=os.curdir):
+    '''Locate all files matching supplied filename pattern in and below
+    supplied root directory.'''
+    for path, dirs, files in os.walk(os.path.abspath(root)):
+        for filename in fnmatch.filter(files, pattern):
+            yield os.path.join(path, filename)
