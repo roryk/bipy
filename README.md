@@ -4,6 +4,8 @@ run bioinformatics pipelines using IPython to handle parallelization across
 cores and nodes. Uses several wrappers and ideas from https://github.com/chapmanb/bcbb and
 will eventually be merged into it.
 
+This documentation is not complete yet.
+
 ## installation
     mkdir ~/src; cd ~/src
     pip install numpy
