@@ -39,20 +39,23 @@ class TestRseqc(unittest.TestCase):
     def test_bam2bigwig(self):
         out_file = rseqc.bam2bigwig(self.input_file, self.config)
         self.assertTrue(file_exists(out_file))
+        os.unlink(out_file)
 
     def test_bamstat(self):
         out_file = rseqc.bam_stat(self.input_file, self.config)
         self.assertTrue(file_exists(out_file))
+        os.unlink(out_file)
 
     def test_clipping_profile(self):
         out_file = rseqc.clipping_profile(self.input_file, self.config)
         self.assertTrue(file_exists(out_file))
+        os.unlink(out_file)
 
     def test_genebody_coverage(self):
         # test on the bam file
         out_file_bam = rseqc.genebody_coverage(self.input_file, self.config)
-        print out_file_bam
         self.assertTrue(file_exists(out_file_bam))
+        os.unlink(out_file_bam)
         # test on the bigwig file
         #bigwig = rseqc.bam2bigwig(self.input_file, self.config)
         #out_file_bw = reseqc.genebody_coverage(bigwig, self.config)
@@ -61,32 +64,35 @@ class TestRseqc(unittest.TestCase):
     def test_junction_annotation(self):
         out_file_junction = rseqc.junction_annotation(self.input_file,
                                                       self.config)
-        print out_file_junction
         self.assertTrue(file_exists(out_file_junction))
+        os.unlink(out_file_junction)
 
     def test_junction_saturation(self):
         out_file_saturation = rseqc.junction_saturation(self.input_file,
                                                         self.config)
         print out_file_saturation
         self.assertTrue(file_exists(out_file_saturation))
+        os.unlink(out_file_saturation)
 
     def test_RPKM_count(self):
         out_file_RPKM = rseqc.RPKM_count(self.input_file,
                                          self.config)
         self.assertTrue(file_exists(out_file_RPKM))
+        os.unlink(out_file_RPKM)
+
+    def test_RPKM_fix(self):
+        out_file_RPKM = rseqc.RPKM_count(self.input_file, self.config)
+        out_file_fixed = rseqc.fix_RPKM_count_file(out_file_RPKM)
+        self.assertTrue(file_exists(out_file_fixed))
+        os.unlink(out_file_RPKM)
+        os.unlink(out_file_fixed)
 
     def test_RPKM_saturation(self):
         out_file_RPKM_saturation = rseqc.RPKM_saturation(self.input_file,
                                                          self.config)
         print out_file_RPKM_saturation
         self.assertTrue(file_exists(out_file_RPKM_saturation))
-
-    def test_RNASeqMetrics(self):
-        rsm = rseqc.RNASeqMetrics(self.config)
-        out_file = rsm(self.input_file)
-
-
-
+        os.unlink(out_file_RPKM_saturation)
 
 if __name__ == "__main__":
     suite = unittest.TestLoader().loadTestsFromTestCase(TestRseqc)
