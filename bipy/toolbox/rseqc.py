@@ -309,7 +309,7 @@ def fix_RPKM_count_file(in_file, out_file=None):
         return out_file
 
     with open(in_file) as in_handle:
-        rpkm = pd.read_table(in_handle)
+        rpkm = pd.io.parsers.read_table(in_handle)
         rpkm["gene_id"] = rpkm["accession"].apply(lambda x:
                                                   x.rsplit("_", 2)[0])
         rpkm["feature"] = rpkm["accession"].apply(lambda x:
