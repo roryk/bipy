@@ -30,7 +30,7 @@ library("scales")
 ```
 
 ```{r variables}
-wd = '/Users/rory/cache/projects/ben_trap_pilot/scripts/'
+wd = '/Users/rory/cache/bipy/scripts/'
 setwd(wd)
 infile = paste(wd, '../data/combined.counts', sep="")
 design = c("CLK1", "CLK3")
@@ -41,7 +41,6 @@ filter_type = 'ensembl_gene_id'
 Differential expression of CLK1 vs CLK3 for a pilot study.
 
 ```{r data-load}
-design = c("CLK1", "CLK3")
 counts = read.table(infile, header=TRUE, row.names=1, col.names=design)
 cds = newCountDataSet(counts, design)
 ```
@@ -167,7 +166,10 @@ plotDispEsts = function(cds) {
 	p
 }
 plotDispEsts(cds)
+scvPlot(cds)
 ```
+
+
 
 ## Differential expression
 ### All upregulated genes with adjusted p-value < 0.1:
