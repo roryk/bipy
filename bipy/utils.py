@@ -57,10 +57,11 @@ def combine_pairs(input_files):
             if len(s.get_matching_blocks()) is not 3:
                 continue
             if comp_file[blocks[0][2]] in PAIR_FILE_IDENTIFIERS:
-                used.append(in_file)
-                used.append(comp_file)
-                pairs.append([in_file, comp_file])
-                break
+                if comp_file[blocks[0][2] - 1] == "_":
+                    used.append(in_file)
+                    used.append(comp_file)
+                    pairs.append([in_file, comp_file])
+                    break
         if in_file not in used:
             pairs.append([in_file])
             used.append(in_file)
