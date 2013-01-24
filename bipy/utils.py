@@ -63,7 +63,7 @@ def combine_pairs(input_files):
                     pairs.append([in_file, comp_file])
                     break
         if in_file not in used:
-            pairs.append(in_file)
+            pairs.append([in_file])
             used.append(in_file)
 
     return pairs
