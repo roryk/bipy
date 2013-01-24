@@ -36,12 +36,13 @@ def _bcbio_tophat_wrapper(fastq_file, pair_file, ref_file,
         quality_format = FASTQ_FORMAT_TO_BCBIO[fastq_format]
 
     max_errors = stage_config.get("max_errors", None)
+    options = stage_config.get("options", {})
     tophat_loc = config["program"].get("tophat", "tophat")
     bowtie_loc = config["program"].get("bowtie", "bowtie")
     out_base = remove_suffix(os.path.basename(fastq_file))
     align_dir = os.path.join(config["dir"]["results"], stage_name)
 
-    bcbio_config["resources"] = {"tophat": {"cores": cores}}
+    bcbio_config["resources"] = {"tophat": {"cores": cores, "options": options}}
     bcbio_config["algorithm"] = {}
     bcbio_config["program"] = {}
     bcbio_config["algorithm"]["quality_format"] = quality_format
