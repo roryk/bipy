@@ -204,7 +204,7 @@ class Cutadapt(AbstractStage):
         elif isinstance(in_file, str):
             out_file = self._run_se(in_file)
             return out_file
-        elif len(in_file) == 0:
+        elif len(in_file) == 1:
             out_file = self._run_se(in_file[0])
         else:
             raise ValueError("Cutadapt can only run on either a single "
