@@ -92,6 +92,7 @@ class Cutadapt(AbstractStage):
         self.out_dir = os.path.join(get_in(self.config, ("dir", "results"),
                                            "results"), self.stage)
         self.length_cutoff = self.stage_config.get("length_cutoff", 30)
+        self.quality_format = self.stage_config.get("quality_format", None)
 
     def _detect_fastq_format(self, in_file):
         formats = DetectFastqFormat.run(in_file)
@@ -139,13 +140,18 @@ class Cutadapt(AbstractStage):
         cutadapt = sh.Command(self.stage_config.get("program",
                                                     "cutadapt"))
 
-        # if not sanger assume old style illumina
-        quality_format = self._detect_fastq_format(in_file)
+        quality_format = self.quality_format
+        if not quality_format:
+            quality_format = self._detect_fastq_format(in_file)
         if quality_format == "sanger":
             quality_base = 33
-        else:
+        elif quality_format == "illumina":
             quality_base = 64
-
+        else:
+            logger.error("Quality format could not be detected. Quality "
+                         "Detected or set as %s. It should be illumina "
+                         "or sanger.")
+            exit(1)
 
         # if we want to trim the polya tails we have to first remove
         # the adapters and then trim the tail
@@ -189,7 +195,6 @@ class Cutadapt(AbstractStage):
     def _run_pe(self, in_files):
         trimmed_files = map(self._cut_file, in_files)
         out_files = map(self._get_lf_file, trimmed_files)
-        quality_format = self._detect_fastq_format(in_files[0])
         if all(map(file_exists, out_files)):
             return out_files
         fastq.filter_reads_by_length(trimmed_files[0], trimmed_files[1],

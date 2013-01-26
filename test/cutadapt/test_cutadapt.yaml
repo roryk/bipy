@@ -23,6 +23,7 @@ stage:
     chemistry: [truseq, illumina, nextera]
     trim_polya: True
     length_cutoff: 20
+    quality_format: sanger
     options:
       error-rate: 0.1
       quality-cutoff: 20
