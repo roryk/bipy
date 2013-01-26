@@ -19,6 +19,7 @@ from Bio.Seq import Seq
 import tempfile
 from bipy.toolbox.fastq import DetectFastqFormat
 from bipy.toolbox import fastq
+from bipy.log import logger
 
 with resource_stream(__name__, 'data/adapters.yaml') as in_handle:
     ADAPTERS = yaml.load(in_handle)
@@ -144,8 +145,10 @@ class Cutadapt(AbstractStage):
         if not quality_format:
             quality_format = self._detect_fastq_format(in_file)
         if quality_format == "sanger":
+            logger.info("Quality format detected as sanger.")
             quality_base = 33
         elif quality_format == "illumina":
+            logger.info("Quality format set to illumina 1.5/1.3")
             quality_base = 64
         else:
             logger.error("Quality format could not be detected. Quality "
