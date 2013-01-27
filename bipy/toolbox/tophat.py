@@ -27,7 +27,7 @@ def _bcbio_tophat_wrapper(fastq_file, pair_file, ref_file,
                           stage_name, config):
     bcbio_config = {}
     stage_config = config["stage"][stage_name]
-    cores = config["cluster"].get("cores", None)
+    cores = stage_config.get("cores", 1)
     # use the listed quality format, if there isn't one, try to figure
     # out what format it is
     quality_format = stage_config.get("quality_format", None)
@@ -42,7 +42,8 @@ def _bcbio_tophat_wrapper(fastq_file, pair_file, ref_file,
     out_base = remove_suffix(os.path.basename(fastq_file))
     align_dir = os.path.join(config["dir"]["results"], stage_name)
 
-    bcbio_config["resources"] = {"tophat": {"cores": cores, "options": options}}
+    bcbio_config["resources"] = {"tophat": {"cores": cores,
+                                            "options": options}}
     bcbio_config["algorithm"] = {}
     bcbio_config["program"] = {}
     bcbio_config["algorithm"]["quality_format"] = quality_format
