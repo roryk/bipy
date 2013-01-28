@@ -2,23 +2,38 @@
 """
 import os
 import sys
-
 import logging
-
 from bcbio import utils
+import uuid
 
 LOG_NAME = "bipy"
 
 logger = logging.getLogger(LOG_NAME)
 
+def setup_engine_logging(config):
+    if not logger.handlers:
+        formatter = logging.Formatter('[%(asctime)s] %(message)s')
+    log_dir = config.get("log_dir", None)
+    if log_dir:
+        suffix = str(uuid.uuid4())
+        logfile = os.path.join(utils.safe_makedir(log_dir),
+                               "{0}-{1}.log".format(LOG_NAME, suffix))
+        handler = logging.FileHandler(logfile)
+        handler.setFormatter(formatter)
+        logger.addHandler(handler)
+
 def setup_logging(config):
     logger.setLevel(logging.INFO)
-    if not logger.handlers:
+    if config.get("engine_log", False):
+        setup_engine_logging(config)
+
+    elif not logger.handlers:
         formatter = logging.Formatter('[%(asctime)s] %(message)s')
         handler = logging.StreamHandler()
         handler.setFormatter(formatter)
         logger.addHandler(handler)
         log_dir = config.get("log_dir", None)
+
         if log_dir:
             logfile = os.path.join(utils.safe_makedir(log_dir),
                                    "{0}.log".format(LOG_NAME))

@@ -68,6 +68,11 @@ def start_cluster(cluster_config):
     client = cluster.client()
     view = cluster.view()
     direct_view = cluster.direct_view()
+    engine_config = cluster_config.copy()
+    engine_config["engine_log"] = True
+    direct_view['config'] = engine_config
+    direct_view.execute('from bipy.log import setup_logging')
+    direct_view.execute('setup_logging(config)')
 
 
 class Cluster(object):
@@ -153,3 +158,9 @@ class Cluster(object):
                 return False
             else:
                 return True
+
+
+def mappable_function(x):
+    logger.error("This is an error.")
+    logger.info("This is info.")
+    return x ** 10
