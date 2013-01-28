@@ -64,3 +64,7 @@ in either .fastq or .fq. For example:
     sample1_rep1_2.fastq
     sample1_rep2_1.fastq
     sample1_rep2_2.fastq
+
+These files should be in the directory specified in the input_dir field of
+the YAML file. bipy will find all of the fastq files in all subdirectories
+of input_dir as well.
