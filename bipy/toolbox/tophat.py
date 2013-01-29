@@ -1,6 +1,6 @@
 from bcbio.ngsalign import tophat
 import os
-from bcbio.utils import file_exists
+from bcbio.utils import file_exists, safe_makedir
 from bipy.utils import remove_suffix, is_pair, get_in
 from bipy.toolbox import fastqc
 from bipy.pipeline.stages import AbstractStage
@@ -54,13 +54,7 @@ def _bcbio_tophat_wrapper(fastq_file, pair_file, ref_file,
 
     out_file = tophat.align(fastq_file, pair_file, ref_file, out_base,
                             align_dir, bcbio_config)
-    os.remove(out_file)
-
-    out_dir = os.path.dirname(out_file)
-    out_file_fixed = os.path.join(out_dir, out_base + ".sam")
-    os.symlink("accepted_hits.sam", out_file_fixed)
-
-    return out_file_fixed
+    return out_file
 
 
 class Tophat(AbstractStage):
