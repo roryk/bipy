@@ -6,36 +6,40 @@ import os
 
 STAGENAME = "tophat"
 
+TOPHAT_1_CONFIG = "test/tophat/test_tophat.yaml"
+TOPHAT_2_CONFIG = "test/tophat/test_tophat2_bowtie2.yaml"
+
+def _load_config(config_file):
+    with open(config_file) as in_handle:
+        config = yaml.load(in_handle)
+    return config
+
+def _run_fixture(input_files, config):
+    if len(input_files) == 2:
+        out_file = tophat.run_with_config(input_files[0], input_files[1],
+                                          config["ref"], "tophat", config)
+    else:
+        out_file = tophat.run_with_config(input_files[0], None,
+                                          config["ref"], "tophat", config)
+    return out_file
+
 
 class TestTophat(unittest.TestCase):
 
     def setUp(self):
-        config_file = "test/tophat/test_tophat.yaml"
-        with open(config_file) as in_handle:
-            self.config = yaml.load(in_handle)
+        pass
 
-        self.input_pairs = self.config["input"]
+    def test_run_with_config_tophat1(self):
+        config = _load_config(TOPHAT_1_CONFIG)
+        for input_files in config["input"]:
+            out_file = _run_fixture(input_files, config)
+            self.assertTrue(file_exists(out_file))
 
-    def test_run_with_config(self):
-
-        for input_files in self.input_pairs:
-            if len(input_files) == 2:
-                out_file = tophat.run_with_config(input_files[0],
-                                                  input_files[1],
-                                                  self.config["ref"],
-                                                  "tophat",
-                                                  self.config)
-                print out_file
-                self.assertTrue(file_exists(out_file))
-            else:
-                out_file = tophat.run_with_config(input_files[0],
-                                                  None,
-                                                  self.config["ref"],
-                                                  "tophat",
-                                                  self.config)
-                print out_file
-                self.assertTrue(file_exists(out_file))
-
+    def test_run_with_config_tophat2(self):
+        config = _load_config(TOPHAT_2_CONFIG)
+        for input_files in config["input"]:
+            out_file = _run_fixture(input_files, config)
+            self.assertTrue(file_exists(out_file))
 
 if __name__ == "__main__":
     suite = unittest.TestLoader().loadTestsFromTestCase(TestTophat)

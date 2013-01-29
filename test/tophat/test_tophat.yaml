@@ -6,7 +6,7 @@ cluster:
 log_dir: log
 
 dir:
-  results: results
+  results: results/test/tophat1
   data: data
   meta: meta
   tmp: tmp
