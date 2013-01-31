@@ -1,6 +1,7 @@
 """ wrapper for using the htseq-count script """
 import os
 from bipy.utils import replace_suffix, flatten, prepare_ref_file
+from bcbio.utils import file_exists
 import subprocess
 from bcbio.utils import safe_makedir
 import pandas as pd
@@ -83,7 +84,7 @@ def run(input_file, gtf_file, options=None, out_file=None):
 
     safe_makedir(os.path.dirname(out_file))
 
-    if os.path.exists(out_file):
+    if file_exists(out_file):
         return out_file
 
     cmd = map(str, flatten(["htseq-count", options, input_file, gtf_file]))
