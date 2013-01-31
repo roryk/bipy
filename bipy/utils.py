@@ -382,6 +382,7 @@ def is_pair(arg):
     """
     return is_sequence(arg) and len(arg) == 2
 
+
 def locate(pattern, root=os.curdir):
     '''Locate all files matching supplied filename pattern in and below
     supplied root directory.'''
