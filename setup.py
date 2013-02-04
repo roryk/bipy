@@ -10,7 +10,6 @@ setup(name="bipy",
       license="MIT",
       namespace_packages=["bipy"],
       packages=find_packages(),
-      dependency_links = ['https://github.com/roryk/sh/tarball/master#egg=sh-1.07'],
       package_data={'bipy': ['toolbox/data/*']},
       install_requires=[
           "numpy >= 1.6.2",
@@ -21,4 +20,4 @@ setup(name="bipy",
           "pandas >= 0.1.0",
           "HTSeq >= 0.5.3p9",
           "pysam == 0.7",
-          "sh"])
+          "sh >= 1.0.8"])
