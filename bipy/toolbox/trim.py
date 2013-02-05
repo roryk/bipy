@@ -186,6 +186,7 @@ class Cutadapt(AbstractStage):
 
     def _run_se(self, in_file):
         # cut polyA tails and adapters off
+        logger.info("Running cutadapt in single end mode on %s." % (in_file))
         trimmed_file = self._cut_file(in_file)
         out_file = self._get_lf_file(trimmed_file)
         if file_exists(out_file):
@@ -196,6 +197,7 @@ class Cutadapt(AbstractStage):
         return out_file
 
     def _run_pe(self, in_files):
+        logger.info("Running cutadapt in paired end mode on %s." % (in_files))
         trimmed_files = map(self._cut_file, in_files)
         out_files = map(self._get_lf_file, trimmed_files)
         if all(map(file_exists, out_files)):
