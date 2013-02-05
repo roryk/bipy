@@ -95,7 +95,7 @@ class Bowtie(AbstractStage):
         self.out_prefix = os.path.join(get_in(self.config,
                                               ("dir", "results"), "results"),
                                               self.stage)
-        self.ref_file = self.config["ref_file"]
+        self.ref_file = self.config["ref"]
 
     def _bowtie_se(self, in_file, out_file):
         self.bowtie(self.options, self.ref_file, in_file, out_file)
