@@ -10,14 +10,12 @@ dir:
   results: results/mouse_mapping # results will go in this directory
   doc: doc # documentation for this analysis goes here
   ref: ref # reference files
-  data: data # raw data goes here. make everything read only for safety
+  data: test/data # raw data goes here. make everything read only for safety
   meta: meta # metadata (annotation, etc) goes here
 
 test_pipeline: False
 
 log_dir: log
-
-input_dir: test/data
 
 ref: /n/hsphS10/hsphfs1/chb/biodata/genomes/Mmusculus/mm9/iGenomes/Ensembl/NCBIM37/Sequence/BowtieIndex/genome
 gtf: /n/hsphS10/hsphfs1/chb/biodata/genomes/Mmusculus/mm9/iGenomes/Ensembl/NCBIM37/Annotation/Genes/genes.gtf
