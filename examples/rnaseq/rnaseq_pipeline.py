@@ -12,19 +12,28 @@ import sys
 import yaml
 from bipy.log import setup_logging, logger
 from bcbio.utils import safe_makedir, file_exists
-import os
 from bipy.utils import (combine_pairs, flatten, append_stem,
                         prepare_ref_file, replace_suffix)
 from bipy.toolbox import (htseq_count, deseq, annotate, rseqc, sam)
 from bcbio.broad import BroadRunner, picardrun
 from bipy.toolbox.trim import Cutadapt
 from bipy.toolbox.fastqc import FastQC
+from bipy.toolbox.fastq import HardClipper
 from bipy.toolbox.tophat import Tophat
+from bipy.toolbox.rseqc import RNASeqMetrics
+from bipy.plugins import StageRepository
 
 import glob
-from itertools import product, repeat
+from itertools import product, repeat, islice
 import sh
+import os, fnmatch
 
+def locate(pattern, root=os.curdir):
+    '''Locate all files matching supplied filename pattern in and below
+    supplied root directory.'''
+    for path, dirs, files in os.walk(os.path.abspath(root)):
+        for filename in fnmatch.filter(files, pattern):
+            yield os.path.join(path, filename)
 
 def find_files(in_dir):
     """
@@ -37,18 +46,22 @@ def find_files(in_dir):
     return files
 
 
-def make_test(in_file, lines=1000000):
+def make_test(in_file, config, lines=1000000):
     """
     take a small subset of the input files for testing. only makes sense for
     text files where lines gives an appopriate number of records, for example,
     FASTQ files should be a multiple of 4.
 
     """
-    out_dir = os.path.join(os.path.dirname(in_file), "test")
+    results_dir = config["dir"]["results"]
+    out_dir = os.path.join(results_dir, "test", "data")
     safe_makedir(out_dir)
     out_file = os.path.join(out_dir,
                             append_stem(os.path.basename(in_file), "test"))
-    sh.head("-" + str(lines), in_file, _out=out_file)
+    with open(in_file) as in_handle, open(out_file, "w") as out_handle:
+        for line in islice(in_handle, lines):
+            out_handle.write(line)
+
     return out_file
 
 
@@ -72,22 +85,35 @@ def main(config_file):
     map(safe_makedir, config["dir"].values())
 
     # specific for project
-    input_dir = config["input_dir"]
-    input_files = find_files(input_dir)
+    input_dir = config["data"]
+    logger.info("Loading files from %s" % (input_dir))
+    input_files = list(locate("*.fq", input_dir))
+    input_files += list(locate("*.fastq", input_dir))
+    logger.info("Input files: %s" % (input_files))
 
-    results_dir = config["dir"].get("results", "results")
+    results_dir = config["dir"]["results"]
+    safe_makedir(results_dir)
+
+    # make the stage repository
+    repository = StageRepository(config)
+    logger.info("Stages found: %s" % (repository.plugins))
+
     if config.get("test_pipeline", False):
-        curr_files = map(make_test, input_files)
+        logger.info("Running a test pipeline on a subset of the reads.")
         results_dir = os.path.join(results_dir, "test_pipeline")
         config["dir"]["results"] = results_dir
+        safe_makedir(results_dir)
+        curr_files = map(make_test, input_files, [config] * len(input_files))
+        logger.info("Converted %s to %s. " % (input_files, curr_files))
     else:
         curr_files = input_files
+        logger.info("Running RNASeq alignment pipeline on %s." % (curr_files))
 
     for stage in config["run"]:
         if stage == "fastqc":
             logger.info("Running fastqc on %s." % (curr_files))
             stage_runner = FastQC(config)
-            view.map(stage_runner, curr_files, block=False)
+            view.map(stage_runner, curr_files)
 
         if stage == "cutadapt":
             curr_files = combine_pairs(curr_files)
@@ -96,42 +122,38 @@ def main(config_file):
             curr_files = view.map(stage_runner, curr_files)
 
         if stage == "tophat":
-            logger.info("Running tophat on %s." % (curr_files))
-            stage_runner = Tophat(config)
-            tophat_outputs = view.map(stage_runner, curr_files)
+            logger.info("Running Tophat on %s." % (curr_files))
+            #tophat = repository["tophat"](config)
+            tophat = Tophat(config)
+            tophat_outputs = view.map(tophat, curr_files)
             bamfiles = view.map(sam.sam2bam, tophat_outputs)
             bamsort = view.map(sam.bamsort, bamfiles)
             view.map(sam.bamindex, bamsort)
             final_bamfiles = bamsort
             curr_files = tophat_outputs
 
+        if stage == "disambiguate":
+            logger.info("Disambiguating %s." % (curr_files))
+            disambiguate = repository[stage](config)
+            view.map(disambiguate, curr_files)
+
         if stage == "htseq-count":
             logger.info("Running htseq-count on %s." % (curr_files))
             htseq_args = zip(*product(curr_files, [config], [stage]))
             htseq_outputs = view.map(htseq_count.run_with_config,
                                      *htseq_args)
+            htseq.combine_counts(htseq_outputs)
 
-        if stage == "coverage":
+        if stage == "rnaseq_metrics":
             logger.info("Calculating RNASeq metrics on %s." % (curr_files))
-            nrun = len(curr_files)
-            ref = prepare_ref_file(config["stage"][stage]["ref"], config)
-            ribo = config["stage"][stage]["ribo"]
-            picard = BroadRunner(config["program"]["picard"], None, {})
-            out_dir = os.path.join(results_dir, stage)
-            safe_makedir(out_dir)
-            out_files = [replace_suffix(os.path.basename(x),
-                                        "metrics") for x in curr_files]
-            out_files = [os.path.join(out_dir, x) for x in out_files]
-            out_files = view.map(picardrun.picard_rnaseq_metrics,
-                                 [picard] * nrun,
-                                 curr_files,
-                                 [ref] * nrun,
-                                 [ribo] * nrun,
-                                 out_files)
+            #coverage = repository[stage](config)
+            coverage = RNASeqMetrics(config)
+            view.map(coverage, curr_files)
 
         if stage == "rseqc":
-            _emit_stage_message(stage, curr_files)
-            rseq_args = zip(*product(curr_files, [config]))
+            logger.info("Running rseqc on %s." % (curr_files))
+            #rseq_args = zip(*product(curr_files, [config]))
+            rseq_args = zip(*product(final_bamfiles, [config]))
             view.map(rseqc.bam_stat, *rseq_args)
             view.map(rseqc.genebody_coverage, *rseq_args)
             view.map(rseqc.junction_annotation, *rseq_args)
@@ -163,5 +185,4 @@ if __name__ == "__main__":
     setup_logging(startup_config)
     start_cluster(startup_config)
     from bipy.cluster import view
-
     main(main_config_file)
