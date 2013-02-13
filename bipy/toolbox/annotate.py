@@ -15,8 +15,7 @@ ORG_TO_ENSEMBL = {"opossum": {"gene_ensembl": "mdomestica_gene_ensembl",
                                 "gene_symbol": "zfin_symbol"},
                     "c.elegans": {"gene_ensembl": "celegans_gene_ensembl",
                                   "filter_type": "wormbase_locus",
-                                  "gene_symbol": "external_gene_id"}
-                                }
+                                  "gene_symbol": "external_gene_id"}}
 
 
 def annotate_table_with_biomart(in_file, join_column,
