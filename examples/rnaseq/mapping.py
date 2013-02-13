@@ -113,7 +113,7 @@ def main(config_file):
         if stage == "fastqc":
             logger.info("Running fastqc on %s." % (curr_files))
             stage_runner = FastQC(config)
-            view.map(stage_runner, curr_files, block=False)
+            view.map(stage_runner, curr_files)
 
         if stage == "cutadapt":
             curr_files = combine_pairs(curr_files)

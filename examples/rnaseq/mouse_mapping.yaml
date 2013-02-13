@@ -5,6 +5,8 @@ cluster:
   cores: 2 # number of ipython engines to spin up
   timeout: 10000 # time to wait for the cluster to be up before failing
   delay: 20 # the delay in spinning up engines once the controller is up
+  queue: hsph
+  scheduler: lsf
 
 dir:
   results: results/mouse_mapping # results will go in this directory

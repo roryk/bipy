@@ -80,6 +80,8 @@ class Cluster(object):
         self.profile = kwargs.get("profile", "default")
         self.n = kwargs.get("cores", 1)
         self.delay = kwargs.get("delay", DEFAULT_DELAY)
+        self.scheduler = kwargs.get("scheduler", "").upper()
+        self.queue = kwargs.get("queue", "hsph")
         self._client = None
         self._view = None
         self._direct_view = None
@@ -87,21 +89,49 @@ class Cluster(object):
         self._log_level = kwargs.get("log_level", 30)
         self._cluster_id = str(uuid.uuid1())
 
+    def _ipcluster_start_common(self):
+        cmd = ["ipcluster", "start", "--daemonize=True",
+               "--delay=" + str(self.delay),
+               "--IPClusterEngines.early_shutdown=180",
+               "--log-level=" + str(self._log_level),
+               "--profile=%s" % (self.profile),
+               "--n=%d" % (self.n),
+               "--debug"]
+        return cmd
+
+    def _is_scheduler_supported(self):
+        SUPPORTED_SCHEDULERS = ["LSF", "SGE"]
+        return self.scheduler in SUPPORTED_SCHEDULERS
+
+    def _start_with_scheduler(self):
+        ns = "bcbio.distributed.ipython"
+        engine_class = "Bcbio%sEngineSetLauncher" % self.scheduler
+        controller_class = "Bcbio%sControllerLauncher" % self.scheduler
+        cmd = self._ipcluster_start_common()
+        cmd.extend(
+            ["--IPClusterStart.controller_launcher_class=%s.%s" %
+             (ns, controller_class),
+             "--IPClusterStart.engine_launcher_class=%s.%s"
+             % (ns, engine_class),
+             "--%sLauncher.queue=%s" % (self.scheduler, self.queue)])
+        subprocess.check_call(cmd)
+
+    def _start_with_local(self):
+        cmd = self._ipcluster_start_common()
+        subprocess.check_call(cmd)
+
     def start(self):
-        """starts the cluster and connects the client to the controller"""
-        narg = "--n=%d" % (self.n)
-        parg = "--profile=%s" % (self.profile)
+        """starts the cluster and connects the client to the controller
+        XXX: in the future, add "--cluster-id=" + self._cluster_id to
+        this, to run each new cluster with a different ID, so we
+        can reuse the same profile. right now there is a bug in
+        ipython that doesn't support this
+
         """
-         XXX: in the future, add "--cluster-id=" + self._cluster_id to
-         this, to run each new cluster with a different ID, so we
-         can reuse the same profile. right now there is a bug in
-         ipython that doesn't support this"""
-        return_code = subprocess.call(["ipcluster", "start",
-                                       "--daemonize=True",
-                                       "--delay=" + str(self.delay),
-                                       "--log-level=" + str(self._log_level),
-                                       "--debug",
-                                       narg, parg])
+        if self._is_scheduler_supported():
+            self._start_with_scheduler()
+        else:
+            self._start_with_local()
 
     def client(self):
         """ returns a handle to the client """
