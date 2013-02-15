@@ -138,11 +138,13 @@ def main(config_file):
             view.map(disambiguate, curr_files)
 
         if stage == "htseq-count":
-            logger.info("Running htseq-count on %s." % (curr_files))
+            logger.info("Running htseq-count on %s." % (bamfiles))
+            name_sorted = view.map(sam.bam_name_sort, bamfiles)
+            curr_files = view.map(sam.bam2sam, name_sorted)
             htseq_args = zip(*product(curr_files, [config], [stage]))
             htseq_outputs = view.map(htseq_count.run_with_config,
                                      *htseq_args)
-            htseq.combine_counts(htseq_outputs)
+            htseq_count.combine_counts(htseq_outputs)
 
         if stage == "rnaseq_metrics":
             logger.info("Calculating RNASeq metrics on %s." % (curr_files))

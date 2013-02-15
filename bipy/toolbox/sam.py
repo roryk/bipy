@@ -96,6 +96,18 @@ def bamsort(in_file, out_prefix=None):
     return out_file
 
 
+def bam_name_sort(in_file, out_prefix=None):
+    """ sort a bam file by read name """
+    if out_prefix is None:
+        out_prefix = replace_suffix(in_file, "name_sorted")
+    out_file = out_prefix + ".bam"
+    if file_exists(out_file):
+        return out_file
+
+    sh.samtools.sort("-n", in_file, out_prefix)
+    return out_file
+
+
 def bamindex(in_file):
     out_file = in_file + ".bai"
 
