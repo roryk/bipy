@@ -85,7 +85,7 @@ def main(config_file):
     map(safe_makedir, config["dir"].values())
 
     # specific for project
-    input_dir = config["data"]
+    input_dir = config["dir"]["data"]
     logger.info("Loading files from %s" % (input_dir))
     input_files = list(locate("*.fq", input_dir))
     input_files += list(locate("*.fastq", input_dir))
