@@ -51,11 +51,11 @@ def _fetch_chrom_sizes(config):
         logger.error("'annotation' must be in the yaml file. See example "
                      " configuration files")
         exit(1)
-    if "genome" not in config["annotation"]:
-        logger.error("'genome_name' must be in the yaml file under  "
+    if "name" not in config["annotation"]:
+        logger.error("'name' must be in the yaml file under  "
                      " 'annotation'. See example configuration files.")
         exit(1)
-    genome = config["annotation"]["genome"]
+    genome = config["annotation"]["name"]
     chrom_size_file = os.path.join(_results_dir(config),
                                    genome + ".sizes")
     if file_exists(chrom_size_file):
@@ -66,7 +66,7 @@ def _fetch_chrom_sizes(config):
 
     if not file_exists(chrom_size_file):
         logger.error("chromosome size file does not exist. Check "
-                     "'annotation': 'genome' to make sure it is valid.")
+                     "'annotation': 'name' to make sure it is valid.")
         exit(1)
     return chrom_size_file
 
