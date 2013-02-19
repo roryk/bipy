@@ -184,6 +184,28 @@ def genebody_coverage(in_file, config, out_prefix=None):
     coverage_run(i=in_file, r=bed, o=out_prefix)
     return coverage_plot_file
 
+def genebody_coverage2(in_file, config, out_prefix=None):
+    """
+    used to check the 5'/3' bias across transcripts, takes a bam file,
+    converts it to bigwig and then uses that
+    """
+    PROGRAM = "geneBody_coverage2.py"
+    if not program_exists(PROGRAM):
+        logger.info("%s is not in the path or is not executable." % (PROGRAM))
+        exit(1)
+
+    in_bigwig = bam2bigwig(in_file, config)
+    prefix = "coverage"
+    out_prefix = _get_out_prefix(in_bigwig, config, out_prefix, prefix)
+    coverage_plot_file = out_prefix + ".geneBodyCoverage.pdf"
+    if file_exists(coverage_plot_file):
+        return coverage_plot_file
+
+    gtf = _get_gtf(config)
+    bed = _gtf2bed(gtf)
+    coverage_run = sh.Command(which(PROGRAM))
+    coverage_run(i=in_bigwig, r=bed, o=out_prefix)
+    return coverage_plot_file
 
 def junction_annotation(in_file, config, out_prefix=None):
     """
