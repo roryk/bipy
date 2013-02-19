@@ -157,7 +157,7 @@ def main(config_file):
             #rseq_args = zip(*product(curr_files, [config]))
             rseq_args = zip(*product(final_bamfiles, [config]))
             view.map(rseqc.bam_stat, *rseq_args)
-            view.map(rseqc.genebody_coverage, *rseq_args)
+            view.map(rseqc.genebody_coverage2, *rseq_args)
             view.map(rseqc.junction_annotation, *rseq_args)
             view.map(rseqc.junction_saturation, *rseq_args)
             RPKM_args = zip(*product(final_bamfiles, [config]))
