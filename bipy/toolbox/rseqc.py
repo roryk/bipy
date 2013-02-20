@@ -149,8 +149,9 @@ def clipping_profile(in_file, config, out_prefix=None):
         exit(1)
 
     prefix = "clipping"
-    out_prefix = _get_out_prefix(in_file, config, out_prefix, prefix)
-    clip_plot_file = out_prefix + ".pdf"
+    out_prefix = _get_out_prefix(in_file, config, out_prefix, "clipping")
+    clip_plot_file = out_prefix + ".clipping_profile.pdf"
+    print clip_plot_file
     if file_exists(clip_plot_file):
         return clip_plot_file
 
@@ -158,7 +159,7 @@ def clipping_profile(in_file, config, out_prefix=None):
     clip_run(i=in_file, o=out_prefix)
     # hack to get around the fact that clipping_profile saves the file in
     # the script execution directory
-    sh.mv("clipping_profile.pdf", clip_plot_file)
+    #sh.mv("clipping_profile.pdf", clip_plot_file)
 
     return clip_plot_file
 
@@ -196,7 +197,10 @@ def genebody_coverage2(in_file, config, out_prefix=None):
 
     in_bigwig = bam2bigwig(in_file, config)
     prefix = "coverage"
-    out_prefix = _get_out_prefix(in_bigwig, config, out_prefix, prefix)
+    out_dir = os.path.join(os.path.dirname(in_bigwig), os.pardir, "coverage")
+    safe_makedir(out_dir)
+    out_prefix = out_dir + "/wiggle"
+    #out_prefix = _get_out_prefix(in_bigwig, config, out_prefix, prefix)
     coverage_plot_file = out_prefix + ".geneBodyCoverage.pdf"
     if file_exists(coverage_plot_file):
         return coverage_plot_file
@@ -204,7 +208,7 @@ def genebody_coverage2(in_file, config, out_prefix=None):
     gtf = _get_gtf(config)
     bed = _gtf2bed(gtf)
     coverage_run = sh.Command(which(PROGRAM))
-    coverage_run(i=in_bigwig, r=bed, o=out_prefix)
+    coverage_run(i=in_bigwig, r=bed, o=out_prefix, t="pdf")
     return coverage_plot_file
 
 def junction_annotation(in_file, config, out_prefix=None):

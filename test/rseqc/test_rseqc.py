@@ -61,6 +61,12 @@ class TestRseqc(unittest.TestCase):
         #out_file_bw = reseqc.genebody_coverage(bigwig, self.config)
         #self.assertTrue(file_exists(out_file_bw))
 
+    def test_genebody_coverage2(self):
+        # test on a bam file
+        out_file_bam = rseqc.genebody_coverage2(self.input_file, self.config)
+        self.assertTrue(file_exists(out_file_bam))
+        os.unlink(out_file_bam)
+
     def test_junction_annotation(self):
         out_file_junction = rseqc.junction_annotation(self.input_file,
                                                       self.config)
