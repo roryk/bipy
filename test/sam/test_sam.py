@@ -44,11 +44,17 @@ class TestSam(unittest.TestCase):
         reads = sam._get_reads_in_bamfile(bam_file)
         self.assertTrue(type(reads) == int)
 
-    def test_downsample_bam(self):
+    def test_downsample_bam_with_outfile(self):
         out_handle = tempfile.NamedTemporaryFile(suffix=".bam")
         bam_file = self.config["input_bamdiff"][0]
         target_reads = 2
         out_file = sam.downsample_bam(bam_file, target_reads, out_handle.name)
+        self.assertEquals(sam._get_reads_in_bamfile(out_file), target_reads)
+
+    def test_downsample_bam_with_memoize(self):
+        bam_file = self.config["input_bamdiff"][0]
+        target_reads = 2
+        out_file = sam.downsample_bam(bam_file, target_reads)
         self.assertEquals(sam._get_reads_in_bamfile(out_file), target_reads)
 
 if __name__ == "__main__":

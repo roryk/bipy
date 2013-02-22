@@ -5,10 +5,19 @@ import sh
 from bipy.utils import replace_suffix, append_stem, is_pair
 from bcbio.utils import file_exists
 from bcbio.distributed.transaction import file_transaction, _flatten_plus_safe
+from bcbio.utils import memoize_outfile
 import os
 import pysam
 from itertools import izip
 from bipy.pipeline.stages import AbstractStage
+
+
+@memoize_outfile(stem=".downsampled")
+def downsample_bam(bam_file, target_reads, out_file=None):
+    percentage_to_sample = _get_percentage_to_sample(bam_file, target_reads)
+    sh.samtools.view("-h", "-b", "-s", percentage_to_sample, "-o", out_file,
+                     bam_file)
+    return out_file
 
 def _get_reads_in_bamfile(bam_file):
     return int(pysam.flagstat(bam_file)[0].split()[0])
@@ -16,13 +25,6 @@ def _get_reads_in_bamfile(bam_file):
 def _get_percentage_to_sample(bam_file, target_reads):
     total_reads = _get_reads_in_bamfile(bam_file)
     return float(target_reads) / float(total_reads)
-
-#@memoize_outfile(stem=".downsampled")
-def downsample_bam(bam_file, target_reads, out_file=None):
-    percentage_to_sample = _get_percentage_to_sample(bam_file, target_reads)
-    sh.samtools.view("-h", "-b", "-s", percentage_to_sample, "-o", out_file,
-                     bam_file)
-    return out_file
 
 def bam2sam(in_file, out_file=None):
     """ convert a BAM file to a SAM file """
