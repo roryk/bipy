@@ -10,6 +10,19 @@ import pysam
 from itertools import izip
 from bipy.pipeline.stages import AbstractStage
 
+def _get_reads_in_bamfile(bam_file):
+    return int(pysam.flagstat(bam_file)[0].split()[0])
+
+def _get_percentage_to_sample(bam_file, target_reads):
+    total_reads = _get_reads_in_bamfile(bam_file)
+    return float(target_reads) / float(total_reads)
+
+#@memoize_outfile(stem=".downsampled")
+def downsample_bam(bam_file, target_reads, out_file=None):
+    percentage_to_sample = _get_percentage_to_sample(bam_file, target_reads)
+    sh.samtools.view("-h", "-b", "-s", percentage_to_sample, "-o", out_file,
+                     bam_file)
+    return out_file
 
 def bam2sam(in_file, out_file=None):
     """ convert a BAM file to a SAM file """
@@ -53,7 +66,8 @@ def only_mapped(in_file, out_file=None):
         out_file = append_stem(in_file, "mapped")
     if file_exists(out_file):
         return out_file
-    sh.samtools.view(in_file, h=True, S=True, F=4, o=out_file)
+    with file_transaction(out_file) as tmp_out_file:
+        sh.samtools.view(in_file, h=True, S=True, F=4, o=tmp_out_file)
     return out_file
 
 
@@ -62,8 +76,10 @@ def only_unmapped(in_file, out_file=None):
         out_file = append_stem(in_file, "unmapped")
     if file_exists(out_file):
         return out_file
-    sh.samtools.view(in_file, h=True, S=True, f=4, o=out_file)
+    with file_transaction(out_file) as tmp_out_file:
+        sh.samtools.view(in_file, h=True, S=True, f=4, o=out_file)
     return out_file
+
 
 def sam2bam(in_file, out_file=None):
     """ convert a SAM file to a BAM file. if the file is already a
@@ -77,8 +93,8 @@ def sam2bam(in_file, out_file=None):
 
     if file_exists(out_file):
         return out_file
-
-    sh.samtools.view("-Sb", in_file, "-o", out_file)
+    with file_transaction(out_file) as tmp_out_file:
+        sh.samtools.view("-Sb", in_file, "-o", tmp_out_file)
     return out_file
 
 

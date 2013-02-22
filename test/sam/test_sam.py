@@ -1,9 +1,11 @@
 import yaml
 from bipy.toolbox import sam
-from bipy.utils import flatten
+from bcbio.utils import file_exists, flatten
 import unittest
 import os
 import hashlib
+import tempfile
+
 
 cur_dir = os.path.dirname(os.path.realpath(__file__))
 CONFIG_FILE = os.path.join(cur_dir, "test_sam.yaml")
@@ -36,6 +38,18 @@ class TestSam(unittest.TestCase):
         dirs = [os.path.join(x, "correct") for x in dirs]
         basenames = map(os.path.basename, out_files)
         return [os.path.join(d, f) for d, f in zip(dirs, basenames)]
+
+    def test_get_reads_in_bamfile(self):
+        bam_file = self.config["input_bamdiff"][0]
+        reads = sam._get_reads_in_bamfile(bam_file)
+        self.assertTrue(type(reads) == int)
+
+    def test_downsample_bam(self):
+        out_handle = tempfile.NamedTemporaryFile(suffix=".bam")
+        bam_file = self.config["input_bamdiff"][0]
+        target_reads = 2
+        out_file = sam.downsample_bam(bam_file, target_reads, out_handle.name)
+        self.assertEquals(sam._get_reads_in_bamfile(out_file), target_reads)
 
 if __name__ == "__main__":
     suite = unittest.TestLoader().loadTestsFromTestCase(TestSam)
