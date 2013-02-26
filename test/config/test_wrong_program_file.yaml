@@ -1,0 +1,33 @@
+cluster:
+  name: odyssey
+  profile: lsf
+  cores: 1
+
+log_dir: log
+
+dir:
+  results: results/test/tophat1
+  data: data
+  meta: meta
+  tmp: tmp
+
+gtf: test/data/E_coli_k12.ASM584v1.15.gtf
+ref: test/data/bowtie/e_coli
+
+program:
+  tophat: /tophat/path/is/wrong/tophat
+  bowtie: bowtie
+
+input:
+  - [test/data/s_1_1_10k.fq, test/data/s_1_2_10k.fq]
+  - [test/data/s_1_1_10k_last.fq]
+
+stage:
+  tophat:
+    name: tophat
+    program: tophat
+    quality_format: None
+    max_errors: 2
+
+run:
+  [tophat]
