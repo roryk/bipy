@@ -11,7 +11,7 @@ dir:
   meta: meta
   tmp: tmp
 
-ref_file: "test/data/bowtie/e_coli"
+ref: "test/data/bowtie/e_coli"
 
 input_single: "test/bowtie/data/s_1_1_10k.fq"
 input_single_correct: "test/bowtie/data/single_correct.sam"
