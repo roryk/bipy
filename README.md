@@ -68,3 +68,7 @@ in either .fastq or .fq. For example:
 These files should be in the directory specified in the input_dir field of
 the YAML file. bipy will find all of the fastq files in all subdirectories
 of input_dir as well.
+
+## Contributors
+Thank you to Brad Chapman, Oliver Hoffman, John Hutchinson, Sara Dempster, Giles Hall and Georgios Marnellos 
+for their contributions.
