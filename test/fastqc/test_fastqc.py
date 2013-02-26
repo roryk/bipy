@@ -1,5 +1,6 @@
 import yaml
 from bipy.toolbox import fastqc
+from bcbio.utils import file_exists
 import unittest
 import os
 import filecmp
@@ -50,6 +51,16 @@ class TestFastqc(unittest.TestCase):
         out_table = self._get_result(run_result)
         self.assertTrue(filecmp.cmp(correct_file, out_table))
         shutil.rmtree(os.path.join(cur_dir, "results"))
+
+    def test_fastqc_fq_extension(self):
+        base, ext = os.path.splitext(self.config["input_single"])
+        fq_file = base + ".fq"
+        os.symlink(os.path.basename(self.config["input_single"]), fq_file)
+        out_file = self.stage(fq_file)
+        self.assertTrue(file_exists(out_file))
+        os.unlink(out_file)
+        os.unlink(fq_file)
+
 
 
 if __name__ == "__main__":

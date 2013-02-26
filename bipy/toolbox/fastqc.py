@@ -69,9 +69,13 @@ def _make_outdir(config):
 def _make_outfile(input_file, config):
     outdir = _make_outdir(config)
     #outfile = "".join([os.path.basename(input_file), "_fastqc.zip"])
-    outfile = "".join([remove_suffix(os.path.basename(input_file)),
-                       "_fastqc.zip"])
-    return os.path.join(outdir, outfile)
+    base, ext = os.path.splitext(os.path.basename(input_file))
+    # fastqc does not handle the .fq extension correctly
+    if ext == ".fq":
+        outfile = os.path.join(outdir, base + ext + "_fastqc.zip")
+    else:
+        outfile = os.path.join(outdir, base + "_fastqc.zip")
+    return outfile
 
 
 def _build_command(input_file, fastqc_config, config):
