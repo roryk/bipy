@@ -26,7 +26,7 @@ stage:
   tophat:
     name: tophat
     program: tophat
-    quality_format: illumina
+    quality_format: None
     max_errors: 2
 
 run:
