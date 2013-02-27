@@ -3,5 +3,8 @@ cluster:
   profile: default
   cores: 4
   delay: 10
+  timeout: 10000
+  queue: hsph
+  scheduler: lsf
 
-log_dir: /Users/rory/cache/bipy/log
+log_dir: log
