@@ -1,8 +1,7 @@
 # bipy
 This is an alpha set of wrappers around commonly-used bioinformatics tools to
 run bioinformatics pipelines using IPython to handle parallelization across
-cores and nodes. Uses several wrappers and ideas from https://github.com/chapmanb/bcbb and
-will eventually be merged into it.
+cores and nodes. Uses several wrappers and ideas from https://github.com/chapmanb/bcbb and will eventually be merged into it.
 
 This documentation is not complete yet.
 
@@ -12,7 +11,7 @@ This documentation is not complete yet.
     git clone git@github.com:roryk/bipy.git
     cd bipy
     python setup.py install
-    
+
 ## quickstart configuration
 It will take a small bit of fiddling around to get everything working as there are a couple of pieces that need
 to interact together properly to work. You can get going testing everything locally by setting up a default IPython
@@ -35,18 +34,18 @@ You should see something that looks like this:
 2013-01-23 17:40:57.878 [IPClusterStart] Starting 4 Engines with LocalEngineSetLauncher
 2013-01-23 17:41:28.202 [IPClusterStart] Engines appear to have started successfully
 ```
-    
+
 If you open another terminal on your machine you can manually test to see if you can talk to the engines:
 ```
 rory@clotho:~/cache/bipy (master)$ python
-Python 2.7.3 (default, Apr 17 2012, 10:42:40) 
+Python 2.7.3 (default, Apr 17 2012, 10:42:40)
 [GCC 4.2.1 (Based on Apple Inc. build 5658) (LLVM build 2335.15.00)] on darwin
 Type "help", "copyright", "credits" or "license" for more information.
 >>> from IPython.parallel import Client
 >>> c = Client(profile="bipy_test")
 >>> view = c[:]
 >>> c.ids
-[0, 1, 2, 3] 
+[0, 1, 2, 3]
 >>> view.map_sync(lambda x: x**10, range(1, 10))
 [1, 1024, 59049, 1048576, 9765625, 60466176, 282475249, 1073741824, 3486784401]
 ```
@@ -65,10 +64,10 @@ in either .fastq or .fq. For example:
     sample1_rep2_1.fastq
     sample1_rep2_2.fastq
 
-These files should be in the directory specified in the input_dir field of
+These files should be in the directory specified in the data field of
 the YAML file. bipy will find all of the fastq files in all subdirectories
 of input_dir as well.
 
 ## Contributors
-Thank you to Brad Chapman, Oliver Hoffman, John Hutchinson, Sara Dempster, Giles Hall and Georgios Marnellos 
+Thank you to Brad Chapman, Oliver Hoffman, John Hutchinson, Sara Dempster, Giles Hall and Georgios Marnellos
 for their contributions.
