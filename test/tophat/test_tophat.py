@@ -3,6 +3,8 @@ import unittest
 from bipy.toolbox import tophat
 from bcbio.utils import file_exists
 import os
+import tempfile
+import shutil
 
 STAGENAME = "tophat"
 
@@ -40,6 +42,28 @@ class TestTophat(unittest.TestCase):
         for input_files in config["input"]:
             out_file = _run_fixture(input_files, config)
             self.assertTrue(file_exists(out_file))
+
+    def test_run_with_prebuilt_transcripts_tophat2(self):
+        temp_index = tempfile.NamedTemporaryFile()
+        config = _load_config(TOPHAT_2_CONFIG)
+        config["stage"]["tophat"]["options"] = {"transcriptome-index": temp_index.name}
+        for input_files in config["input"]:
+            out_file = _run_fixture(input_files, config)
+            self.assertTrue(file_exists(out_file))
+
+        # check to see that it runs with the index file too
+        shutil.rmtree(os.path.dirname(config["dir"]["results"]))
+        for input_files in config["input"]:
+            out_file = _run_fixture(input_files, config)
+            self.assertTrue(file_exists(out_file))
+
+
+    def tearDown(self):
+        config = _load_config(TOPHAT_2_CONFIG)
+        out_dir = os.path.dirname(config["dir"]["results"])
+        if os.path.exists(out_dir):
+            shutil.rmtree(out_dir)
+
 
 if __name__ == "__main__":
     suite = unittest.TestLoader().loadTestsFromTestCase(TestTophat)
