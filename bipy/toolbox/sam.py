@@ -38,7 +38,8 @@ def bam2sam(in_file, out_file=None):
         return out_file
 
     with file_transaction(out_file) as tmp_out_file:
-        sh.samtools.view(in_file, "-h", _out=tmp_out_file)
+        cmd = sh.samtools.view.bake(h=True, _out=tmp_out_file)
+        cmd(in_file)
 
     return out_file
 
@@ -61,6 +62,13 @@ def is_sam(in_file):
         return True
     else:
         return False
+
+def sortsam(in_file, out_file=None):
+    out_file = append_stem(in_file, "sorted")
+    with file_transaction(out_file) as tmp_out_file:
+        sort = sh.sort.bake(s=True, k="1,1", _out=tmp_out_file)
+        sort(in_file)
+    return out_file
 
 
 def only_mapped(in_file, out_file=None):
@@ -96,7 +104,8 @@ def sam2bam(in_file, out_file=None):
     if file_exists(out_file):
         return out_file
     with file_transaction(out_file) as tmp_out_file:
-        sh.samtools.view("-Sb", in_file, "-o", tmp_out_file)
+        sort_sam = sh.samtools.view.bake(S=True, b=True, o=tmp_out_file)
+        sort_sam(in_file)
     return out_file
 
 
