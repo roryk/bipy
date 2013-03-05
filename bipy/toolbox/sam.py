@@ -10,21 +10,27 @@ import os
 import pysam
 from itertools import izip
 from bipy.pipeline.stages import AbstractStage
+from bipy.log import logger
 
 
-@memoize_outfile(stem=".downsampled")
+#@memoize_outfile(stem=".downsampled")
 def downsample_bam(bam_file, target_reads, out_file=None):
+    if out_file is None:
+        out_file = append_stem(bam_file, "downsampled")
     percentage_to_sample = _get_percentage_to_sample(bam_file, target_reads)
     sh.samtools.view("-h", "-b", "-s", percentage_to_sample, "-o", out_file,
                      bam_file)
     return out_file
 
 def _get_reads_in_bamfile(bam_file):
-    return int(pysam.flagstat(bam_file)[0].split()[0])
+    return int(str(sh.samtools.flagstat(bam_file))[0].split()[0])
 
 def _get_percentage_to_sample(bam_file, target_reads):
     total_reads = _get_reads_in_bamfile(bam_file)
-    return float(target_reads) / float(total_reads)
+    if target_reads > total_reads:
+        return 1.0
+    else:
+        return float(target_reads) / float(total_reads)
 
 def bam2sam(in_file, out_file=None):
     """ convert a BAM file to a SAM file """
