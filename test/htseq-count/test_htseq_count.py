@@ -3,6 +3,7 @@ import unittest
 from bipy.toolbox import htseq_count
 from bcbio.utils import safe_makedir
 import os
+import shutil
 
 STAGENAME = "htseq-count"
 
@@ -43,6 +44,11 @@ class TestHtseqcount(unittest.TestCase):
         df = htseq_count.combine_counts(to_combine, None, out_file=out_file)
         self.assertTrue(os.path.exists(out_file))
         self.assertTrue(os.path.getsize(out_file) > 0)
+
+    def tearDown(self):
+        results_dir = "results/%s" % (STAGENAME)
+        if os.path.exists(results_dir):
+            shutil.rmtree(results_dir)
 
 
 if __name__ == "__main__":
