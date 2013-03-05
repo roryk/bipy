@@ -1,0 +1,6 @@
+@HD	VN:1.0	SO:coordinate
+@PG	ID:TopHat	VN:2.0.6	CL:/usr/local/bin/tophat --num-threads=1 --GTF=test/data/E_coli_k12.ASM584v1.15.gtf --transcriptome-index=test/transcriptome_index --output-dir=results/test_pipeline/tophat/tx/tmpYtHqEl/s_1_1_10k_trimmed.fixed_tophat --no-convert-bam --mate-std-dev=13 --b2-sensitive --mate-inner-dist=146 test/data/bowtie2/e_coli results/test_pipeline/cutadapt/s_1_1_10k_trimmed.fixed.fastq results/test_pipeline/cutadapt/s_1_2_10k_trimmed.fixed.fastq
+@SQ	SN:Chromosome	LN:4639675
+Chromosome	189	255	+	EBESCT00000001087
+Chromosome	336	2799	+	EBESCT00000004324
+Chromosome	2800	3733	+	EBESCT00000002097
