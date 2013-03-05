@@ -126,7 +126,8 @@ def main(config_file):
             #tophat = repository["tophat"](config)
             tophat = Tophat(config)
             tophat_outputs = view.map(tophat, curr_files)
-            sortsam = view.map(sam.sortsam, tophat_outputs)
+            sortsam = view.map(sam.coordinate_sort_sam, tophat_outputs,
+                               [config] * len(tophat_outputs))
             bamfiles = view.map(sam.sam2bam, sortsam)
             bamsort = view.map(sam.bamsort, bamfiles)
             view.map(sam.bamindex, bamsort)
