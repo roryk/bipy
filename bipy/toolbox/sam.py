@@ -11,6 +11,7 @@ import pysam
 from itertools import izip
 from bipy.pipeline.stages import AbstractStage
 from bipy.log import logger
+from bcbio.broad import picardrun, BroadRunner
 
 
 #@memoize_outfile(stem=".downsampled")
@@ -68,6 +69,13 @@ def is_sam(in_file):
         return True
     else:
         return False
+
+def coordinate_sort_sam(in_file, config, out_file=None):
+    out_file = append_stem(in_file, "sorted")
+    picard = BroadRunner(config["program"]["picard"], None, {})
+    picardrun.picard_sort(picard, in_file, sort_order="coordinate",
+                          out_file=out_file)
+    return out_file
 
 def sortsam(in_file, out_file=None):
     out_file = append_stem(in_file, "sorted")
