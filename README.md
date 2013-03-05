@@ -52,8 +52,11 @@ Type "help", "copyright", "credits" or "license" for more information.
 
 
 ## requirements
-You should have Bowtie, Tophat, fastqc and samtools installed along with annotation genomes for your
-organism of interest.
+You should have Bowtie, Tophat, fastqc and samtools installed along with annotation genomes for your organism of interest.
+To run the rseqc tools you should also have fetchChromSizes and wigToBigWig
+somewhere in your path. You can get those two utilities here in either
+the Linux or OSX directory:
+http://hgdownload.cse.ucsc.edu/admin/exe/
 
 ## input files
 FASTQ input files should have a naming scheme where mate pairs have the same
