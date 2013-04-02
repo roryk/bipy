@@ -17,6 +17,9 @@ FASTQ_FORMAT_TO_BCBIO = {"sanger": None,
 
 def run_with_config(fastq_file, pair_file, ref_file,
                     stage_name, config):
+    if not any_bowtie_reference_exists(ref_file):
+        bowtie_reference_not_found_error()
+
     out_file = _bcbio_tophat_wrapper(fastq_file, pair_file,
                                      ref_file, stage_name,
                                      config)
@@ -49,6 +52,11 @@ def _bcbio_tophat_wrapper(fastq_file, pair_file, ref_file,
     bcbio_config["algorithm"]["quality_format"] = quality_format
     bcbio_config["algorithm"]["max_errors"] = max_errors
     bcbio_config["gtf"] = config.get("gtf", None)
+    if bcbio_config["gtf"]:
+        if not file_exists(bcbio_config["gtf"]):
+            raise ValueError("GTF file does not exist. Please check to make sure that "
+                             "the value of gtf is set corretly in the configuration file.")
+            sys.exit(1)
     bcbio_config["program"]["tophat"] = tophat_loc
     bcbio_config["program"]["bowtie"] = bowtie_loc
 
@@ -68,9 +76,11 @@ class Tophat(AbstractStage):
     def __call__(self, in_file):
         self._start_message(in_file)
         if is_pair(in_file):
+            logger.info("Detected %s as a pair." % in_file)
             out_file = run_with_config(in_file[0], in_file[1],
                                        self.ref, self.stage, self.config)
         else:
+            logger.info("Detected %s as non-paired." % in_file)
             out_file = run_with_config(in_file[0], None, self.ref,
                                        self.stage, self.config)
         self._end_message(in_file)
@@ -96,6 +106,8 @@ class Bowtie(AbstractStage):
                                               ("dir", "results"), "results"),
                                               self.stage)
         self.ref_file = self.config["ref"]
+        if not any_bowtie_reference_exists(self.ref_file):
+            bowtie_reference_not_found_error()
 
     def _bowtie_se(self, in_file, out_file):
         self.bowtie(self.options, self.ref_file, in_file, out_file)
@@ -134,3 +146,16 @@ class Bowtie(AbstractStage):
         self._end_message(in_file)
 
         return out_file
+
+def any_bowtie_reference_exists(prefix):
+    return bowtie_1_reference_exists(prefix) or bowtie_2_reference_exists(prefix)
+
+def bowtie_1_reference_exists(prefix):
+    return file_exists(prefix + ".1.ebwt")
+def bowtie_2_reference_exists(prefix):
+    return file_exists(prefix + ".1.bt2")
+
+def bowtie_reference_not_found_error():
+    raise ValueError("Bowtie 1 or Bowtie 2 reference not found. Please make "
+                     "sure that ref: is set correctly in the config file.")
+    sys.exit(1)
