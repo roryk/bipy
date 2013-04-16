@@ -72,7 +72,7 @@ def is_sam(in_file):
 
 def coordinate_sort_sam(in_file, config, out_file=None):
     out_file = append_stem(in_file, "sorted")
-    picard = BroadRunner(config["program"]["picard"], None, {})
+    picard = BroadRunner(config["program"]["picard"], None, {"algorithm": {}})
     picardrun.picard_sort(picard, in_file, sort_order="coordinate",
                           out_file=out_file)
     return out_file
