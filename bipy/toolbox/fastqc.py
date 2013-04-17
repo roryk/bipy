@@ -82,7 +82,7 @@ def _build_command(input_file, fastqc_config, config):
     program = fastqc_config["program"]
     options = map(str, list(flatten(fastqc_config["options"])))
     outdir = _make_outdir(config)
-    options += ["--outdir", outdir]
+    options += ["--outdir", outdir, "--kmers", "10"]
     cmd = list(flatten([program, options, input_file]))
     return cmd
 
