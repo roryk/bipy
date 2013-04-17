@@ -216,6 +216,7 @@ class Cutadapt(AbstractStage):
             return out_file
         elif len(in_file) == 1:
             out_file = self._run_se(in_file[0])
+            return out_file
         else:
             raise ValueError("Cutadapt can only run on either a single "
                              "file as a string or a pair of files to "
