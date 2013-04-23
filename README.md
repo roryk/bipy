@@ -71,6 +71,10 @@ These files should be in the directory specified in the data field of
 the YAML file. bipy will find all of the fastq files in all subdirectories
 of input_dir as well.
 
+## recommendations
+Set test_pipeline: True in the YAML configuration file to run the whole pipeline on a small subset of your data first,
+to make sure it works correctly.
+
 ## Contributors
 Thank you to Brad Chapman, Oliver Hoffman, John Hutchinson, Sara Dempster, Giles Hall and Georgios Marnellos
 for their contributions.

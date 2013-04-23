@@ -89,6 +89,8 @@ class Cutadapt(AbstractStage):
             self.chemistry = [self.chemistry]
 
         self.options = self.stage_config.get("options", "")
+        # it is important that we don't drop any reads out during cutadapt
+        self.options["minimum-length": 0]
         self.user_adapters = self.stage_config.get("adapters", [])
         self.out_dir = os.path.join(get_in(self.config, ("dir", "results"),
                                            "results"), self.stage)
