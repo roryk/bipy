@@ -81,6 +81,11 @@ stage:
       - [--idattr=gene_id]
       - [--mode=union]
 
+  hard_trim:
+    bases: 8
+    right_side: False
+    quality_format: sanger
+
 # order to run the stages in
 run:
   [fastqc, cutadapt, fastqc, tophat, rnaseq_metrics, rseqc, htseq-count]

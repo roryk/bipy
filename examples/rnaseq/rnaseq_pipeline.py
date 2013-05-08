@@ -154,6 +154,11 @@ def main(config_file):
             coverage = RNASeqMetrics(config)
             view.map(coverage, curr_files)
 
+        if stage == "hard_trim":
+            logger.info("Trimming from the beginning of reads on %s." % (curr_files))
+            hard_clipper = HardClipper(config)
+            curr_files = view.map(hard_clipper, curr_files)
+
         if stage == "rseqc":
             logger.info("Running rseqc on %s." % (curr_files))
             #rseq_args = zip(*product(curr_files, [config]))

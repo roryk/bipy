@@ -25,6 +25,9 @@ QUALITY_TYPE = {"sanger": "fastq-sanger",
                 "illumina_1.3+": "fastq-illumina",
                 "illumina_1.5+": "fastq-illumina",
                 "illumina_1.8+": "fastq-sanger"}
+QUALITY_TYPE_HARD_TRIM = {"sanger": "fastq-sanger",
+                    "solexa": "fastq-solexa",
+                    "illumina": "fastq-illumina"}
 
 
 
@@ -64,7 +67,7 @@ def _trim_read(record, bases=8, right_side=True):
         return record[bases:]
 
 
-def hard_clip(in_file, bases=8, right_side=True, out_file=None):
+def hard_clip(in_file, bases=8, right_side=True, quality_format="sanger", out_file=None):
     """
     hard clip a fastq file by removing N bases from each read
     bases is the number of bases to clip
@@ -81,7 +84,7 @@ def hard_clip(in_file, bases=8, right_side=True, out_file=None):
         logger.info("Hard clipping %d bases from the left side of "
                     "reads in %s." % (bases, in_file))
 
-    quality_type = QUALITY_TYPE[DetectFastqFormat.run(in_file)[0]]
+    quality_type = QUALITY_TYPE_HARD_TRIM[quality_format]
     out_file = append_stem(in_file, "clip")
     if file_exists(out_file):
         return out_file
@@ -274,6 +277,7 @@ class HardClipper(AbstractStage):
         self.stage_config = config["stage"][self.stage]
         self.bases = self.stage_config.get("bases", 8)
         self.right_side = self.stage_config.get("right_side", True)
+        self.quality_format = self.stage_config.get("quality_format", "sanger")
 
     def out_file(self, in_file):
         results_dir = self.config["dir"].get("results", "results")
@@ -285,5 +289,5 @@ class HardClipper(AbstractStage):
         out_file = self.out_file(in_file)
         if file_exists(out_file):
             return out_file
-        hard_clip(in_file, self.bases, self.right_side, out_file)
+        hard_clip(in_file, self.bases, self.right_side, self.quality_format, out_file)
         return out_file
