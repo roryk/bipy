@@ -107,6 +107,11 @@ For those adapters if you want to trim the reverse complement, you need to suppl
 The above example will trim off both the Truseq adapters as well as your supplied sequence from
 the right side of the read.
 
+The *._trimmed.fixed.fastq files are the results of running cutadapt. These have been
+trimmed with cutadapt and reads < 20 bases are removed. If the input lanes were paired,
+and one of the pair is removed, the other one is as well, and placed in the .singles.fastq
+file.
+
 
 ## recommendations
 Set test_pipeline: True in the YAML configuration file to run the whole pipeline
