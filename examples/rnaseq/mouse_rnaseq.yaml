@@ -81,7 +81,7 @@ stage:
       - [--idattr=gene_id]
       - [--mode=union]
 
-  hard_trim:
+  hard_clip:
     bases: 8
     right_side: False
     quality_format: sanger
