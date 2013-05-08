@@ -7,7 +7,7 @@ you will have to write a couple of functions to group the input
 data in useful ways
 
 """
-from bipy.cluster import start_cluster, stop_cluster
+from cluster_helper.cluster import cluster_view
 import sys
 import yaml
 from bipy.log import setup_logging, logger
@@ -34,16 +34,6 @@ def locate(pattern, root=os.curdir):
     for path, dirs, files in os.walk(os.path.abspath(root)):
         for filename in fnmatch.filter(files, pattern):
             yield os.path.join(path, filename)
-
-def find_files(in_dir):
-    """
-    returns a list of the sequence files in a directory recursively
-
-    """
-
-    FASTQ_EXTENSIONS = [".fq", ".fastq"]
-    files = [sh.find(in_dir, "-name", "*" + x) for x in FASTQ_EXTENSIONS]
-    return files
 
 
 def make_test(in_file, config, lines=1000000):
@@ -77,7 +67,7 @@ def _emit_stage_message(stage, curr_files):
     logger.info("Running %s on %s" % (stage, curr_files))
 
 
-def main(config_file):
+def main(config_file, view):
     with open(config_file) as in_handle:
         config = yaml.load(in_handle)
 
@@ -185,16 +175,13 @@ def main(config_file):
             view.map(rseqc.RPKM_saturation, *rseq_args)
             curr_files = tophat_outputs
 
-    # end gracefully
-    stop_cluster()
-
-
 if __name__ == "__main__":
-    # read in the config file and perform initial setup
     main_config_file = sys.argv[1]
     with open(main_config_file) as config_in_handle:
         startup_config = yaml.load(config_in_handle)
     setup_logging(startup_config)
-    start_cluster(startup_config)
-    from bipy.cluster import view
-    main(main_config_file)
+    cluster_config = startup_config["cluster"]
+    with cluster_view(cluster_config["scheduler"],
+                      cluster_config["queue"],
+                      cluster_config["cores"]) as view:
+        main(main_config_file, view)
