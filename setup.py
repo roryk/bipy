@@ -11,6 +11,7 @@ setup(name="bipy",
       namespace_packages=["bipy"],
       packages=find_packages(),
       package_data={'bipy': ['toolbox/data/*']},
+      scripts = ['examples/rnaseq/rnaseq_pipeline.py'],
       install_requires=[
           "numpy >= 1.6.2",
           "ipython >= 0.13.1",
