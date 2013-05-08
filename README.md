@@ -71,10 +71,47 @@ These files should be in the directory specified in the data field of
 the YAML file. bipy will find all of the fastq files in all subdirectories
 of input_dir as well.
 
+## tool information
+### cutadapt
+For most libraries, this configuration should work fine:
+```
+  cutadapt:
+    program: cutadapt
+    chemistry: [truseq]
+    trim_polya: True
+    options:
+      error-rate: 0.1
+      quality-cutoff: 20
+```
+That will search for the first 13 base pairs of the Truseq adapters and trim it
+off right right end of the read. It will also search for the reverse complement
+of the Truseq adapters. Finally after trimming those off, it will trim off the
+polyA tail.
+
+For older libraries, you may need to use "illumina" instead of "truseq". This will
+trim off the pre Truseq Illumina adapters. For libraries made with the NextEra chemistry,
+use "nextera" to trim the adapters off.
+
+If you need to supply your own adapters you can use a configuration that looks like this:
+```
+  cutadapt:
+    program: cutadapt
+    chemistry: [truseq]
+    trim_polya: True
+    adapters: ["your_adapter_1", "your_adapter_2"]
+    options:
+      error-rate: 0.1
+      quality-cutoff: 20
+```
+For those adapters if you want to trim the reverse complement, you need to supply that as well.
+The above example will trim off both the Truseq adapters as well as your supplied sequence from
+the right side of the read.
+
+
 ## recommendations
-Set test_pipeline: True in the YAML configuration file to run the whole pipeline on a small subset of your data first,
-to make sure it works correctly.
+Set test_pipeline: True in the YAML configuration file to run the whole pipeline
+on a small subset of your data first, to make sure it works correctly.
 
 ## Contributors
-Thank you to Brad Chapman, Oliver Hoffman, John Hutchinson, Sara Dempster, Giles Hall and Georgios Marnellos
-for their contributions.
+Thank you to Brad Chapman, Oliver Hoffman, John Hutchinson, Sara Dempster, Giles
+Hall and Georgios Marnellos for their contributions.
