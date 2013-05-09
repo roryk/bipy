@@ -144,7 +144,7 @@ def main(config_file, view):
             coverage = RNASeqMetrics(config)
             view.map(coverage, curr_files)
 
-        if stage == "hard_trim":
+        if stage == "hard_clip":
             logger.info("Trimming from the beginning of reads on %s." % (curr_files))
             hard_clipper = HardClipper(config)
             curr_files = view.map(hard_clipper, curr_files)
