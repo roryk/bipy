@@ -56,11 +56,6 @@ def get_read_name_function(suffix):
 
 
 def _trim_read(record, bases=8, right_side=True):
-    if bases >= len(record):
-        record.seq = ""
-        record.letter_annotations = {}
-        return record
-
     if right_side:
         return record[:-bases]
     else:
