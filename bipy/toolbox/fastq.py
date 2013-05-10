@@ -80,7 +80,8 @@ def hard_clip(in_file, bases=8, right_side=True, quality_format="sanger", out_fi
                     "reads in %s." % (bases, in_file))
 
     quality_type = QUALITY_TYPE_HARD_TRIM[quality_format]
-    out_file = append_stem(in_file, "clip")
+    if not out_file:
+        out_file = append_stem(in_file, "clip")
     if file_exists(out_file):
         return out_file
     in_iterator = SeqIO.parse(in_file, quality_type)
