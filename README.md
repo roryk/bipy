@@ -1,18 +1,18 @@
-### bipy
+## bipy
 This is an alpha set of wrappers around commonly-used bioinformatics tools to
 run bioinformatics pipelines using IPython to handle parallelization across
 cores and nodes. Uses several wrappers and ideas from https://github.com/chapmanb/bcbb and will eventually be merged into it.
 
 This documentation is not complete yet.
 
-#### installation
+### installation
     mkdir ~/src; cd ~/src
     pip install numpy
     git clone git@github.com:roryk/bipy.git
     cd bipy
     python setup.py install
 
-#### cluster configuration
+### cluster configuration
 If you have a standard scheduler/queue setup, setting up bipy to run on your cluster is
 straightforward:
 
@@ -38,14 +38,14 @@ cluster:
   queue: hsph
 ```
 
-#### quickstart configuration
+### quickstart configuration
 It will take a small bit of fiddling around to get everything working as there are a couple of pieces that need
 to interact together properly to work. You can get going testing everything locally by setting up a default IPython
 profile to run on your local machine.
 
     ipython profile create --parallel --profile=bipy_test
 
-#### troubleshooting
+### troubleshooting
 If the cluster unit test is failing, something might not be set up properly with IPython.
 
 First, test to see that IPython is functioning correctly:
@@ -77,14 +77,14 @@ Type "help", "copyright", "credits" or "license" for more information.
 ```
 
 
-#### requirements
+### requirements
 You should have Bowtie, Tophat, fastqc and samtools installed along with annotation genomes for your organism of interest.
 To run the rseqc tools you should also have fetchChromSizes and wigToBigWig
 somewhere in your path. You can get those two utilities here in either
 the Linux or OSX directory:
 http://hgdownload.cse.ucsc.edu/admin/exe/
 
-#### input files
+### input files
 FASTQ input files should have a naming scheme where mate pairs have the same
 name except for one containing _1 and the other containing _2 and ending
 in either .fastq or .fq. For example:
@@ -97,8 +97,8 @@ These files should be in the directory specified in the data field of
 the YAML file. bipy will find all of the fastq files in all subdirectories
 of input_dir as well.
 
-#### tool information
-##### cutadapt
+### tool information
+#### cutadapt
 For most libraries, this configuration should work fine:
 ```
   cutadapt:
@@ -139,10 +139,10 @@ and one of the pair is removed, the other one is as well, and placed in the .sin
 file.
 
 
-#### recommendations
+### recommendations
 Set test_pipeline: True in the YAML configuration file to run the whole pipeline
 on a small subset of your data first, to make sure it works correctly.
 
-#### Contributors
+### contributors
 Thank you to Brad Chapman, Oliver Hoffman, John Hutchinson, Sara Dempster, Giles
 Hall and Georgios Marnellos for their contributions.
