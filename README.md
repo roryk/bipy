@@ -12,6 +12,32 @@ This documentation is not complete yet.
     cd bipy
     python setup.py install
 
+## cluster configuration
+If you have a standard scheduler/queue setup, setting up bipy to run on your cluster is
+straightforward:
+
+```
+cluster:
+  cores: 4 # number of ipython engines to spin up
+  scheduler: lsf
+  queue: hsph
+```
+
+This will run a total of 4 IPython engines on the Platform LSF scheduler on the queue 'hsph'.
+Other values for scheduler which will work are: torque and sge.
+
+If you have a more complicated setup you can still use bipy. You will need to set up
+an IPython parallel profile that describes your cluster setup and then use that
+profile like this:
+
+```
+cluster:
+  cores: 4 # number of ipython engines to spin up
+  profile: your_profile
+  scheduler: lsf
+  queue: hsph
+```
+
 ## quickstart configuration
 It will take a small bit of fiddling around to get everything working as there are a couple of pieces that need
 to interact together properly to work. You can get going testing everything locally by setting up a default IPython
