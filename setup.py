@@ -21,4 +21,5 @@ setup(name="bipy",
           "pandas >= 0.1.0",
           "HTSeq >= 0.5.3p9",
           "pysam == 0.7",
-          "sh >= 1.0.8"])
+          "sh >= 1.0.8",
+          "ipython-cluster-helper"])
