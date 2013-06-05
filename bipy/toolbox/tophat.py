@@ -61,11 +61,11 @@ def _bcbio_tophat_wrapper(fastq_file, pair_file, ref_file,
     bcbio_config["program"]["tophat"] = tophat_loc
     bcbio_config["program"]["bowtie"] = bowtie_loc
     bcbio_config["program"]["picard"] = config["program"]["picard"]
+    bcbio_config["program"]["gatk"] = {"dir": ""}
 
     out_file = tophat.align(fastq_file, pair_file, ref_file, out_base,
                             align_dir, bcbio_config)
     return out_file
-
 
 class Tophat(AbstractStage):
 
