@@ -12,6 +12,7 @@ setup(name="bipy",
       packages=find_packages(),
       package_data={'bipy': ['toolbox/data/*']},
       scripts = ['examples/rnaseq/rnaseq_pipeline.py'],
+      dependency_links = ['http://github.com/humbughq/python-humbug/tarball/master#egg=python-humbug-0.1.6'],
       install_requires=[
           "numpy >= 1.6.2",
           "ipython >= 0.13.1",
