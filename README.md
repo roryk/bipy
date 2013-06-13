@@ -21,10 +21,13 @@ cluster:
   cores: 4 # number of ipython engines to spin up
   scheduler: lsf
   queue: hsph
+  cores_per_job: 8
 ```
 
-This will run a total of 4 IPython engines on the Platform LSF scheduler on the queue 'hsph'.
-Other values for scheduler which will work are: torque and sge.
+This will run a total of 4 IPython engines on the Platform LSF scheduler on the queue 'hsph'. Each IPython engine
+will run with 8 cores reserved for it, so if you add a cores: 8 option to a step that can be run on multiple cores,
+such as Tophat (see below) it will run on multiple cores. Other supported values for scheduler which will work are: 
+torque and sge.
 
 If you have a more complicated setup you can still use bipy. You will need to set up
 an IPython parallel profile that describes your cluster setup and then use that
@@ -146,7 +149,7 @@ and one of the pair is removed, the other one is as well, and placed in the .sin
 file.
 
 #### tophat
-You can pass arbitraty options to Tophat by editing the Tophat portion of the YAML file.
+You can pass arbitrary options to Tophat by editing the Tophat portion of the YAML file.
 For example if you wanted to run Tophat, using a custom transcriptome located in
 /my/custom/transcriptome and run a quick Bowtie alignment you could pass
 --b2-very-fast option and the custom transcriptome option to Tophat like this:
@@ -159,8 +162,9 @@ For example if you wanted to run Tophat, using a custom transcriptome located in
       b2-very-fast: True
       transcriptome-index: /my/custom/transcriptome
     quality_format: sanger
+    cores: 8
 ```
-If your reads are of one of the old non-standard Illumina format you can set the
+Setting cores to 8 will run each Tophat alignment on multiple cores, so the total If your reads are of one of the old non-standard Illumina format you can set the
 quality_format to "illumina" to handle older-style illumina reads. If you aren't sure,
 stick to the sanger format as it is probably the correct format.
 
