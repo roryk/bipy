@@ -97,9 +97,16 @@ These files should be in the directory specified in the data field of
 the YAML file. bipy will find all of the fastq files in all subdirectories
 of input_dir as well.
 
-### tool information
+### tool configuration
+
+#### fastqc
+FastQC runs some standard quality metrics on your FASTQ files. This stage should be run
+before and after adapter trimming so you can see the effect of trimming the adapters on your
+sequence composition.
+
 #### cutadapt
-For most libraries, this configuration should work fine:
+The cutadapt tool is what trims adapters and other contaminating sequences from the
+ends of reads. For most libraries, this configuration should work fine:
 ```
   cutadapt:
     program: cutadapt
@@ -138,6 +145,74 @@ trimmed with cutadapt and reads < 20 bases are removed. If the input lanes were 
 and one of the pair is removed, the other one is as well, and placed in the .singles.fastq
 file.
 
+#### tophat
+You can pass arbitraty options to Tophat by editing the Tophat portion of the YAML file.
+For example if you wanted to run Tophat, using a custom transcriptome located in
+/my/custom/transcriptome and run a quick Bowtie alignment you could pass
+--b2-very-fast option and the custom transcriptome option to Tophat like this:
+
+```
+  tophat:
+    name: tophat
+    program: tophat
+    options:
+      b2-very-fast: True
+      transcriptome-index: /my/custom/transcriptome
+    quality_format: sanger
+```
+If your reads are of one of the old non-standard Illumina format you can set the
+quality_format to "illumina" to handle older-style illumina reads. If you aren't sure,
+stick to the sanger format as it is probably the correct format.
+
+### output files
+#### quality control
+There are several places to look for quality control. In the results/fastqc directory
+there are two sets of results, one for the untrimmed lanes and one for the trimmed lanes.
+You should compare the results for each lane and see if they make sense; it is possible
+there is a contaminating adapter that was missed; if that is true you can add it to cutadapt
+and rerun to trim it off.
+
+The second place to look for quality control is to look at the alignments themselves. You can
+load the Tophat mapped, sorted and indexed BAM file in
+results/tophat/your_file_name_tophat.sorted.sorted.bam into IGV and visually inspect the
+reads. You should see relatively even coverage across your genes, if that is not the
+case then there may be a problem with your library.
+
+There are two places to look for alignment metrics. The first is under results/rnaseq_metrics;
+this is the output from Picard's CollectRnaSeqMetrics tool. In that file are two tab
+delimited rows which are important, under ## METRICS. In there you can see total bases that
+map to various features of the genome, including coding regions, UTRs and rRNA. It is also
+import to look at the 5'-3' bias, you should not see much of a bias in your sample.
+
+The second place to look for mapping metrics is in the rseqc directory. In the
+subdirectories under rseqc there are the following quality information:
+
+bam_stat: this is a high level summary of the overall number of records mapped.
+junction: these are two pie charts showing the overall class of junctions covered
+
+RPKM_count: this is a rough RPKM calculation. RPKM is known to introduce biases so use this
+with caution; this is mostly to get an overall look at your data. If you want to have
+normalized data, I suggest loading the count files from htseq-count (see below) into
+edgeR and extracting the normalized counts there. The RPKM file you want to look at is
+the fixed file, this aggregates the counts by gene_id instead of at the exon level.
+
+RPKM_saturation: the PDF file in this directory is a plot showing what would happen to your
+RPKM calculation if you downsampled your data. This is not all that useful, it has been
+shown in several places that if you are doing a standard gene-level differential expression
+experiment, you can do well with 10-15 million usable reads. If you have many more reads than
+that, it is a good idea to run more replicates rather than sequence the same sample more.
+
+saturation: the PDF file in this directory shows what happens to your ability to detect
+known and novel splice junctions as you drop the read depth, another way of determining
+what you would lose if you sequenced less.
+
+#### downstream analysis
+The results/tophat/your_file/your_file.sorted.sorted.bam file can be used to
+visualize the reads. For performing differential expression, you can find a list
+of gene-level counts in results/htseq-count. You can use these gene-level counts
+to perform a differential expression analysis using edgeR or DESeq.  Example R
+markdown scripts to do this analysis are in scripts/deseq.Rmd and
+scripts/edgeR_paired.Rmd.
 
 ### recommendations
 Set test_pipeline: True in the YAML configuration file to run the whole pipeline
