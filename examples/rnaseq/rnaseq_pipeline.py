@@ -181,7 +181,9 @@ if __name__ == "__main__":
         startup_config = yaml.load(config_in_handle)
     setup_logging(startup_config)
     cluster_config = startup_config["cluster"]
+    cores_per_job = cluster_config.get("cores_per_job", 1)
     with cluster_view(cluster_config["scheduler"],
                       cluster_config["queue"],
-                      cluster_config["cores"]) as view:
+                      cluster_config["cores"],
+                      cores_per_job) as view:
         main(main_config_file, view)
