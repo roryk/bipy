@@ -272,7 +272,7 @@ def RPKM_count(in_file, config, out_prefix=None):
     if file_exists(rpkm_count_file):
         return rpkm_count_file
     RPKM_count_run = sh.Command(which(PROGRAM))
-    RPKM_count_run(i=in_file, r=bed, o=out_prefix)
+    RPKM_count_run(i=in_file, r=bed, o=out_prefix, u=True)
     return rpkm_count_file
 
 
