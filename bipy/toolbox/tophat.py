@@ -6,7 +6,8 @@ from bipy.toolbox import fastqc
 from bipy.pipeline.stages import AbstractStage
 from bcbio.distributed.transaction import file_transaction
 import sh
-from bipy.log import logger
+#from bipy.log import logger
+from bcbio.log import logger
 import sys
 
 

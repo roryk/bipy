@@ -5,10 +5,11 @@ from bcbio.utils import file_exists
 import subprocess
 from bcbio.utils import safe_makedir
 import pandas as pd
-from bipy.log import logger
+from bcbio.log import logger
 import rpy2.robjects as robjects
 import HTSeq
 from bipy import gtf
+from bcbio.provenance import do
 
 
 def _load_htseq_count_file(filename):
@@ -89,7 +90,8 @@ def run(input_file, gtf_file, options=None, out_file=None):
 
     cmd = map(str, flatten(["htseq-count", options, input_file, gtf_file]))
     with open(out_file, "w") as out_handle:
-        subprocess.check_call(cmd, stdout=out_handle)
+        out_handle.write(do.run(cmd, "Running htseq-count on %s." % (input_file),
+                                None))
 
     return out_file
 

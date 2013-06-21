@@ -10,9 +10,8 @@ from bipy.toolbox.reporting import LatexReport, safe_latex
 import sh
 import zipfile
 from bipy.pipeline.stages import AbstractStage
-
-
-logger = logging.getLogger("bipy")
+from bcbio.log import logger, setup_local_logging
+from bcbio.provenance import do
 
 _FASTQ_RANGES = {"sanger": [33, 73],
                  "solexa": [59, 104],
@@ -94,7 +93,7 @@ def run(input_file, fastqc_config, config):
        return outfile
 
     cmd = _build_command(input_file, fastqc_config, config)
-    subprocess.check_call(cmd)
+    do.run(cmd, "Running FastQC on %s" % (input_file), None)
 
     return outfile
 
@@ -302,6 +301,7 @@ class FastQC(AbstractStage):
             raise IOError('%s not found.' % (in_file))
 
     def __call__(self, in_file):
+        setup_local_logging(self.config, self.config["parallel"])
         self._start_message(in_file)
         if is_pair(in_file):
             out_file = [run(x, self.stage_config, self.config) for x in in_file]

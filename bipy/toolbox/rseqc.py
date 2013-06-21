@@ -2,18 +2,17 @@ import os
 from bipy.utils import (replace_suffix, which, remove_suffix, append_stem,
                         prepare_ref_file)
 import sh
-from bipy.log import logger
 from bcbio.utils import file_exists, safe_makedir, add_full_path
-from os.path import basename
 import glob
 import pandas as pd
 from math import sqrt
-import abc
 from mako.template import Template
 from bipy.toolbox.reporting import LatexReport, safe_latex
 from bcbio.distributed.transaction import file_transaction
 from bipy.pipeline.stages import AbstractStage
 from bcbio.broad import BroadRunner, picardrun
+from bcbio.log import logger
+from bcbio.provenance import do
 
 
 def program_exists(path):
@@ -89,7 +88,8 @@ def bam2bigwig(in_file, config, out_prefix=None):
 
     if not file_exists(wiggle_file):
         bam2wig = sh.Command(which(PROGRAM))
-        bam2wig(i=in_file, s=chrom_size_file, o=out_prefix)
+        cmd = str(bam2wig.bake(i=in_file, s=chrom_size_file, o=out_prefix))
+        do.run(cmd, "Converting %s from BAM to bigwig" % (in_file), None)
 
     bigwig_file = out_prefix + ".bw"
 
@@ -113,7 +113,8 @@ def wig2bigwig(wiggle_file, chrom_size_file, out_file):
 
     wigToBigWig = sh.Command(which(PROGRAM))
     with file_transaction(out_file) as tx_out_file:
-        wigToBigWig(wiggle_file, chrom_size_file, tx_out_file)
+        cmd = str(wigToBigWig.bake(wiggle_file, chrom_size_file, tx_out_file))
+        do.run(cmd, "Converting %s from wig to bigwig." % (wiggle_file), None)
     return out_file
 
 
@@ -134,7 +135,8 @@ def bam_stat(in_file, config, out_prefix=None):
 
     bam_stat_run = sh.Command(which(PROGRAM))
     with file_transaction(out_file) as tx_out_file:
-        bam_stat_run(i=in_file, _err=tx_out_file)
+        cmd = str(bam_stat_run.bake(i=in_file, _err=tx_out_file))
+        do.run(cmd, "Calculating BAM statistics from %s." % (in_file), None)
 
     return out_file
 
@@ -156,10 +158,8 @@ def clipping_profile(in_file, config, out_prefix=None):
         return clip_plot_file
 
     clip_run = sh.Command(which(PROGRAM))
-    clip_run(i=in_file, o=out_prefix)
-    # hack to get around the fact that clipping_profile saves the file in
-    # the script execution directory
-    #sh.mv("clipping_profile.pdf", clip_plot_file)
+    cmd = str(clip_run.bake(i=in_file, o=out_prefix))
+    do.run(cmd, "Calculating 5' and 3' clipping profile of %s." % (in_file), None)
 
     return clip_plot_file
 
@@ -182,7 +182,8 @@ def genebody_coverage(in_file, config, out_prefix=None):
     gtf = _get_gtf(config)
     bed = _gtf2bed(gtf)
     coverage_run = sh.Command(which(PROGRAM))
-    coverage_run(i=in_file, r=bed, o=out_prefix)
+    cmd = str(coverage_run.bake(i=in_file, r=bed, o=out_prefix))
+    do.run(cmd, "Calculating coverage of %s." % (in_file), None)
     return coverage_plot_file
 
 def genebody_coverage2(in_file, config, out_prefix=None):
@@ -208,7 +209,8 @@ def genebody_coverage2(in_file, config, out_prefix=None):
     gtf = _get_gtf(config)
     bed = _gtf2bed(gtf)
     coverage_run = sh.Command(which(PROGRAM))
-    coverage_run(i=in_bigwig, r=bed, o=out_prefix, t="pdf")
+    cmd = str(coverage_run.bake(i=in_bigwig, r=bed, o=out_prefix, t="pdf"))
+    do.run(cmd, "Calculating coverage of %s." % (in_bigwig), None)
     return coverage_plot_file
 
 def junction_annotation(in_file, config, out_prefix=None):
@@ -228,7 +230,9 @@ def junction_annotation(in_file, config, out_prefix=None):
     junction_run = sh.Command(which(PROGRAM))
     gtf = _get_gtf(config)
     bed = _gtf2bed(gtf)
-    junction_run(i=in_file, o=out_prefix, r=bed)
+    cmd = str(junction_run.bake(i=in_file, o=out_prefix, r=bed))
+    do.run(cmd, "Calculating novel/known information about splice junctions of "
+           "%s." % (in_file), None)
     return junction_file
 
 
@@ -251,7 +255,9 @@ def junction_saturation(in_file, config, out_prefix=None):
     saturation_run = sh.Command(which(PROGRAM))
     gtf = _get_gtf(config)
     bed = _gtf2bed(gtf)
-    saturation_run(i=in_file, o=out_prefix, r=bed)
+    cmd = str(saturation_run.bake(i=in_file, o=out_prefix, r=bed))
+    do.run(cmd, "Calculating junction saturation estimation of %s." % in_file,
+           None)
     return saturation_file
 
 
@@ -272,7 +278,9 @@ def RPKM_count(in_file, config, out_prefix=None):
     if file_exists(rpkm_count_file):
         return rpkm_count_file
     RPKM_count_run = sh.Command(which(PROGRAM))
-    RPKM_count_run(i=in_file, r=bed, o=out_prefix)
+    cmd = str(RPKM_count_run.bake(i=in_file, r=bed, o=out_prefix))
+    do.run(cmd, "Calculating RPKM of %s using reference %s." % (in_file, bed),
+           None)
     return rpkm_count_file
 
 
@@ -368,7 +376,8 @@ def RPKM_saturation(in_file, config, out_prefix=None):
         return rpkm_saturation_file
 
     RPKM_saturation_run = sh.Command(which(PROGRAM))
-    RPKM_saturation_run(i=in_file, r=bed, o=out_prefix)
+    cmd = str(RPKM_saturation_run.bake(i=in_file, r=bed, o=out_prefix))
+    do.run(cmd, "Calculating RPKM saturation of %s." % in_file, None)
     return rpkm_saturation_file
 
 def _get_out_dir(in_file, config, out_prefix, prefix):

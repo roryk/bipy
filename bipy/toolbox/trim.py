@@ -19,7 +19,8 @@ from Bio.Seq import Seq
 import tempfile
 from bipy.toolbox.fastq import DetectFastqFormat
 from bipy.toolbox import fastq
-from bipy.log import logger
+from bcbio.provenance import do
+from bcbio.log import logger, setup_local_logging
 
 with resource_stream(__name__, 'data/adapters.yaml') as in_handle:
     ADAPTERS = yaml.load(in_handle)
@@ -164,21 +165,23 @@ class Cutadapt(AbstractStage):
             temp_cut = tempfile.NamedTemporaryFile(suffix=".fastq",
                                                    dir=self.out_dir)
             # trim off adapters
-            cutadapt(in_file, self.options, adapters,
-                     quality_base=quality_base,
-                     _out=temp_cut.name)
+            cmd = str(cutadapt.bake(in_file, self.options, adapters,
+                                    quality_base=quality_base, out=temp_cut.name))
+            do.run(cmd, "Cutadapt trim of adapters of %s." % (in_file), None)
             with file_transaction(out_file) as temp_out:
                 polya = ADAPTERS.get("polya")
                 # trim off polya
-                cutadapt(temp_cut.name, self.options, "-a",
-                         polya, "-a", self._rc_adapters(polya),
-                         quality_base=quality_base,
-                         _out=temp_out)
+                cmd = str(cutadapt.bake(temp_cut.name, self.options, "-a",
+                                        polya, "-a", self._rc_adapters(polya),
+                                        quality_base=quality_base, out=temp_out))
+                do.run(cmd, "Cutadapt trim of polyA tail of %s." % (temp_cut.name),
+                       None)
             return out_file
         else:
             with file_transaction(out_file) as temp_out:
-                cutadapt(in_file, self.options, adapters,
-                         _out=temp_out)
+                cmd = str(cutadapt.bake(in_file, self.options, adapters,
+                                    out=temp_out))
+                do.run(cmd, "Cutadapt trim of %s." % (in_file))
             return out_file
 
     def _get_lf_file(self, in_file):
@@ -210,6 +213,7 @@ class Cutadapt(AbstractStage):
         return out_files
 
     def __call__(self, in_file):
+        setup_local_logging(self.config, self.config["parallel"])
         if is_pair(in_file):
             out_files = self._run_pe(in_file)
             return out_files
