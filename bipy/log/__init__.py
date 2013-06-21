@@ -53,9 +53,9 @@ def create_log_handler(config):
         handler = logbook.FileHandler(os.path.join(log_dir, "%s.log" % LOG_NAME))
     else:
         handler = logbook.StreamHandler(sys.stdout)
- 
+
     if email:
-        handler = logbook.MailHandler(email, [email], 
+        handler = logbook.MailHandler(email, [email],
                                       format_string=u'''Subject: [BCBB pipeline] {record.extra[run]} \n\n {record.message}''',
                                       level='INFO', bubble = True)
     return handler
