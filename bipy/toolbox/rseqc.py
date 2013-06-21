@@ -278,9 +278,13 @@ def RPKM_count(in_file, config, out_prefix=None):
     if file_exists(rpkm_count_file):
         return rpkm_count_file
     RPKM_count_run = sh.Command(which(PROGRAM))
+<<<<<<< HEAD
     cmd = str(RPKM_count_run.bake(i=in_file, r=bed, o=out_prefix))
     do.run(cmd, "Calculating RPKM of %s using reference %s." % (in_file, bed),
            None)
+=======
+    RPKM_count_run(i=in_file, r=bed, o=out_prefix, u=True)
+>>>>>>> 0f4d101d8e4ed1391c6d6c6165f49d7d79ac4e5d
     return rpkm_count_file
 
 
