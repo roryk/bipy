@@ -213,7 +213,7 @@ class Cutadapt(AbstractStage):
         return out_files
 
     def __call__(self, in_file):
-        setup_local_logging(self.config, self.config["parallel"])
+        setup_local_logging(self.config, self.config.get("parallel", None))
         if is_pair(in_file):
             out_files = self._run_pe(in_file)
             return out_files
