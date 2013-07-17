@@ -301,7 +301,7 @@ class FastQC(AbstractStage):
             raise IOError('%s not found.' % (in_file))
 
     def __call__(self, in_file):
-        setup_local_logging(self.config, self.config["parallel"])
+        setup_local_logging(self.config, {"type": "ipython"})
         self._start_message(in_file)
         if is_pair(in_file):
             out_file = [run(x, self.stage_config, self.config) for x in in_file]
