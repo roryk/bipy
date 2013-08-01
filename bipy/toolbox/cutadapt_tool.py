@@ -7,6 +7,7 @@ import os
 from bcbio.utils import safe_makedir, file_exists
 import sh
 import yaml
+import bcbio.provenance.do as do
 
 
 # adapter sequences for various commonly used systems
@@ -127,7 +128,8 @@ def run(in_file, stage_config, config):
         return out_file
 
     arguments.extend(["--output", out_file, in_file])
-    subprocess.check_call(arguments)
+    do.run(arguments, "Running cutadapt on %s." % (in_file),
+           None)
     return out_file
 
 def _common_prefix(first, second):

@@ -10,6 +10,7 @@ import rpy2.robjects as robjects
 import HTSeq
 from bipy import gtf
 from bcbio.provenance import do
+from bcbio.distributed.transaction import file_transaction
 
 
 def _load_htseq_count_file(filename):
@@ -77,9 +78,7 @@ def _get_outfilename(input_file):
     return out_file
 
 
-def run(input_file, gtf_file, options=None, out_file=None):
-    if options is None:
-        options = []
+def run(input_file, gtf_file, out_file=None):
     if out_file is None:
         out_file = _get_outfilename(input_file)
 
@@ -88,17 +87,17 @@ def run(input_file, gtf_file, options=None, out_file=None):
     if file_exists(out_file):
         return out_file
 
-    cmd = map(str, flatten(["htseq-count", options, input_file, gtf_file]))
-    with open(out_file, "w") as out_handle:
-        out_handle.write(do.run(cmd, "Running htseq-count on %s." % (input_file),
-                                None))
+    with file_transaction(out_file) as tmp_out_file:
+        htseq_cmd = ("htseq-count --mode=union --stranded=no --type=exon "
+                     "--idattr=gene_id {input_file} {gtf_file} > {tmp_out_file}")
+
+        cmd = htseq_cmd.format(**locals())
+        do.run(cmd, "Running htseq-count on %s." % (input_file), None)
 
     return out_file
 
 
 def run_with_config(input_file, config, stage, out_file=None):
-    stage_config = config["stage"][stage]
-    options = stage_config.get("options", [])
 
     if out_file is None:
         out_dir = os.path.join(config["dir"].get("results", None), stage)
@@ -110,5 +109,5 @@ def run_with_config(input_file, config, stage, out_file=None):
                      "configuration files.")
         exit(1)
     ref = prepare_ref_file(config["annotation"], config)
-    out_file = run(input_file, ref, options, out_file)
+    out_file = run(input_file, ref, out_file)
     return out_file
