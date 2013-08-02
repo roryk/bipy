@@ -78,7 +78,6 @@ class Tophat(AbstractStage):
         self.ref = config.get("ref", None)
 
     def __call__(self, in_file):
-        self._start_message(in_file)
         if isinstance(in_file, basestring):
             logger.info("Detected %s as non-paired." % in_file)
             out_file = run_with_config(in_file, None, self.ref,
@@ -91,7 +90,6 @@ class Tophat(AbstractStage):
             logger.info("Detected %s as non-paired." % in_file)
             out_file = run_with_config(in_file[0], None, self.ref,
                                        self.stage, self.config)
-        self._end_message(in_file)
         return out_file
 
 
