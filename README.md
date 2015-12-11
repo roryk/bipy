@@ -1,3 +1,7 @@
+## this is repository is deprecated, do not use.
+
+bipy has been merged into [bcbio-nextgen](https://github.com/chapmanb/bcbio-nextgen) 
+
 ## bipy
 This is an alpha set of wrappers around commonly-used bioinformatics tools to
 run bioinformatics pipelines using IPython to handle parallelization across
